@@ -10,6 +10,7 @@
 		17ED8D696043B5D3961F2B33 /* OpenLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 245B57DFE833E957529C165B /* OpenLog.swift */; };
 		4A8D3F626FDDC335A67A26A5 /* DoomscrollerBlockerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B45D36688DFF3E8D0B0833 /* DoomscrollerBlockerApp.swift */; };
 		71AD08503E403B4E883E372D /* YouTubeOpenedIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42D3F857A828867DCB19D87 /* YouTubeOpenedIntent.swift */; };
+		8592BD258BF0038CA2E307E6 /* CameraPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB6D5EB523D08853127909A /* CameraPreview.swift */; };
 		F39A907866EBB0653DCA41E2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F07BD8F1AEFDA823AC73FB6 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
@@ -19,6 +20,7 @@
 		A0DF50466F124D680A64A937 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		AA3D3C329203BBEE73CFD400 /* DoomscrollerBlocker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DoomscrollerBlocker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B42D3F857A828867DCB19D87 /* YouTubeOpenedIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeOpenedIntent.swift; sourceTree = "<group>"; };
+		CFB6D5EB523D08853127909A /* CameraPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreview.swift; sourceTree = "<group>"; };
 		E1B45D36688DFF3E8D0B0833 /* DoomscrollerBlockerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoomscrollerBlockerApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -43,6 +45,7 @@
 		D534ED2CDBADC9EA7873AE5F /* DoomscrollerBlocker */ = {
 			isa = PBXGroup;
 			children = (
+				CFB6D5EB523D08853127909A /* CameraPreview.swift */,
 				0F07BD8F1AEFDA823AC73FB6 /* ContentView.swift */,
 				E1B45D36688DFF3E8D0B0833 /* DoomscrollerBlockerApp.swift */,
 				245B57DFE833E957529C165B /* OpenLog.swift */,
@@ -119,6 +122,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8592BD258BF0038CA2E307E6 /* CameraPreview.swift in Sources */,
 				F39A907866EBB0653DCA41E2 /* ContentView.swift in Sources */,
 				4A8D3F626FDDC335A67A26A5 /* DoomscrollerBlockerApp.swift in Sources */,
 				17ED8D696043B5D3961F2B33 /* OpenLog.swift in Sources */,
@@ -137,6 +141,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Doomscroller Blocker";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Doomscroller Blocker uses the camera to count your push-ups.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -215,6 +220,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Doomscroller Blocker";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Doomscroller Blocker uses the camera to count your push-ups.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
