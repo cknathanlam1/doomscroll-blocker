@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.openURL) private var openURL
     @StateObject private var log = OpenLog.shared
 
     var body: some View {
@@ -13,6 +14,17 @@ struct ContentView: View {
                 ForEach(log.opens, id: \.self) { date in
                     Text("YouTube opened at \(date.formatted(date: .omitted, time: .standard))")
                 }
+            }
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    openURL(URL(string: "youtube://")!)
+                } label: {
+                    Text("Open YouTube")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .padding()
             }
             .navigationTitle("Doomscroller Blocker")
             .toolbar {
