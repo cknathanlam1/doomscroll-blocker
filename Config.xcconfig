@@ -1,0 +1,4 @@
+// Shared defaults. Each person overrides these in Local.xcconfig (gitignored).
+APP_BUNDLE_ID = edu.mit.seancs.DoomscrollerBlocker
+DEVELOPMENT_TEAM =
+#include? "Local.xcconfig"

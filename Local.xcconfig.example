@@ -1,0 +1,4 @@
+// Copy to Local.xcconfig (gitignored) and fill in your own values.
+// Free Apple accounts cannot share a bundle ID, so each person needs a unique one.
+APP_BUNDLE_ID = edu.mit.<yourname>.DoomscrollerBlocker
+DEVELOPMENT_TEAM = YOURTEAMID

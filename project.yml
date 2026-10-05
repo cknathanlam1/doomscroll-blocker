@@ -1,0 +1,23 @@
+name: DoomscrollerBlocker
+options:
+  bundleIdPrefix: edu.mit.seancs
+  deploymentTarget:
+    iOS: "17.0"
+configFiles:
+  Debug: Config.xcconfig
+  Release: Config.xcconfig
+targets:
+  DoomscrollerBlocker:
+    type: application
+    platform: iOS
+    sources: [DoomscrollerBlocker]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID)
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Doomscroller Blocker
+        CODE_SIGN_STYLE: Automatic
