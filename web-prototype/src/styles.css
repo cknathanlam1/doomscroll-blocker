@@ -1,0 +1,1729 @@
+/*
+ * Push-up Test — prototype styles.
+ * One dark world, one volt accent (from the Doomscroller Blocker design).
+ * Everything on the camera screens must be readable from ~3 ft away with the
+ * phone on the floor: giant numbers, high contrast, almost no words.
+ *
+ * Phones (portrait) are the base layout. Wide screens (a laptop on the floor)
+ * get their own section near the end: "Laptop / desktop / wide screens".
+ */
+
+:root {
+  color-scheme: dark;
+  --page: #0b0b0d;
+  --panel: #17171b;
+  --panel2: #202026;
+  --line: #2c2c33;
+  --fg: #f5f5f2;
+  --mute: #8e8e96;
+  --dim: #55555d;
+  --volt: #ffd43b;
+  --volt-ink: #191300;
+  --volt-soft: rgba(255, 212, 59, 0.14);
+  --ok: #32d74b;
+  --warn: #ff9f0a;
+  --bad: #ff453a;
+  --ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', system-ui, sans-serif;
+  --num: 'Barlow Condensed', 'SF Pro Display', -apple-system, system-ui, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* iPhone notch / home-indicator insets (non-zero with viewport-fit=cover). */
+  --st: env(safe-area-inset-top, 0px);
+  --sb: env(safe-area-inset-bottom, 0px);
+  --sl: env(safe-area-inset-left, 0px);
+  --sr: env(safe-area-inset-right, 0px);
+
+  /* On a desktop browser the app is a phone-width column in the middle. */
+  --app-w: 480px;
+}
+
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+html {
+  height: 100%;
+  background: var(--page);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--page);
+  color: var(--fg);
+  font-family: var(--ui);
+  font-size: 15px;
+  line-height: 1.45;
+  /* No double-tap zoom delay; taps feel instant. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Camera screens never scroll or rubber-band. */
+body.on-stage {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+body[data-screen='success'],
+html:has(body[data-screen='success']) {
+  background: var(--volt);
+}
+button {
+  font: inherit;
+  color: inherit;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--volt);
+  outline-offset: 3px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* Phone vs laptop wording: app.ts sets <body data-device="phone|desktop">. Phone is the default. */
+body:not([data-device='desktop']) .only-desktop,
+body[data-device='desktop'] .only-phone {
+  display: none !important;
+}
+
+/* ---------- Building blocks (from the design) ---------- */
+#app {
+  position: relative;
+  max-width: var(--app-w);
+  margin: 0 auto;
+}
+.screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: calc(var(--st) + 20px) calc(var(--sr) + 20px) calc(var(--sb) + 20px) calc(var(--sl) + 20px);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.between {
+  justify-content: space-between;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+}
+.grow {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.center-v {
+  justify-content: center;
+}
+.g4 {
+  gap: 4px;
+}
+.g8 {
+  gap: 8px;
+}
+.g12 {
+  gap: 12px;
+}
+.big {
+  font-family: var(--num);
+  font-weight: 900;
+  line-height: 0.82;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.h-xl {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-wrap: balance;
+}
+.h-l {
+  font-size: 22px;
+  font-weight: 750;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+.txt {
+  font-size: 15px;
+  color: var(--mute);
+  margin: 0;
+  line-height: 1.4;
+}
+.small {
+  font-size: 12.5px;
+  color: var(--mute);
+  margin: 0;
+  line-height: 1.4;
+}
+.mono {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  word-break: break-word;
+}
+.ico {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.card {
+  background: var(--panel);
+  border-radius: 18px;
+  padding: 14px;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.pill svg {
+  width: 15px;
+  height: 15px;
+}
+.pill.lock {
+  background: var(--panel2);
+  color: var(--fg);
+}
+.pill.proto {
+  box-shadow: inset 0 0 0 1.5px var(--mute);
+  color: var(--mute);
+  font-family: var(--num);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 52px;
+  border-radius: 16px;
+  border: 0;
+  font-size: 17px;
+  font-weight: 650;
+  width: 100%;
+  transition: transform 0.1s;
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn:disabled {
+  opacity: 0.5;
+}
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.btn.xl {
+  height: 58px;
+  font-size: 19px;
+}
+.btn.pri {
+  background: var(--volt);
+  color: var(--volt-ink);
+}
+.btn.sec {
+  background: var(--panel2);
+  color: var(--fg);
+}
+.btn.blk {
+  background: var(--volt-ink);
+  color: var(--volt);
+}
+.btn.ghost {
+  background: none;
+  color: var(--mute);
+  height: 44px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.btn.ghost.ink {
+  color: var(--volt-ink);
+  font-weight: 650;
+  opacity: 0.8;
+}
+
+.tile {
+  width: 84px;
+  height: 84px;
+  border-radius: 26px;
+  background: var(--panel2);
+  display: grid;
+  place-items: center;
+  color: var(--fg);
+}
+.tile svg {
+  width: 44px;
+  height: 44px;
+}
+.tile.bad {
+  color: var(--bad);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  counter-reset: s;
+}
+.steps li {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.35;
+  align-items: start;
+}
+.steps li::before {
+  counter-increment: s;
+  content: counter(s);
+  width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--panel2);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--volt);
+}
+
+/* ---------- 1. Start ---------- */
+.start-hero {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0 4px;
+}
+.hero-n {
+  font-size: clamp(150px, 46vw, 220px);
+  color: var(--volt);
+  margin-left: -6px;
+}
+.hero-unit {
+  font-family: var(--num);
+  font-weight: 900;
+  font-size: 52px;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+.hero-sub {
+  font-size: 20px;
+  font-weight: 650;
+  margin-top: 8px;
+}
+.hero-note {
+  margin-top: 10px;
+  font-size: 14px;
+}
+.banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.banner.bad {
+  background: rgba(255, 69, 58, 0.14);
+  color: #ffb4ae;
+  box-shadow: inset 0 0 0 1px rgba(255, 69, 58, 0.4);
+}
+.tip {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--mute);
+  line-height: 1.4;
+}
+.tip .ico {
+  color: var(--volt);
+}
+.settings {
+  display: flex;
+  flex-direction: column;
+  margin-top: 6px;
+}
+.glabel2 {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+  padding: 0 14px 6px;
+}
+.gfoot {
+  font-size: 12px;
+  color: var(--mute);
+  padding: 6px 14px 0;
+  line-height: 1.35;
+  margin: 0;
+}
+.group {
+  background: var(--panel);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.group .it {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 48px;
+  padding: 6px 14px;
+  font-size: 15px;
+  position: relative;
+}
+.group .it + .it::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 0;
+  height: 1px;
+  background: var(--line);
+}
+.group .lbl {
+  flex: 1 1 auto;
+}
+.seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: var(--panel2);
+  border-radius: 9px;
+  padding: 2px;
+  gap: 2px;
+}
+.seg button {
+  height: 30px;
+  min-width: 48px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--mute);
+  font-size: 13px;
+  font-weight: 600;
+}
+.seg button[aria-pressed='true'] {
+  background: #636366;
+  color: var(--fg);
+}
+.stepper {
+  display: flex;
+  align-items: center;
+  background: var(--panel2);
+  border-radius: 9px;
+  height: 34px;
+  overflow: hidden;
+}
+.stepper button {
+  width: 44px;
+  height: 100%;
+  border: 0;
+  background: none;
+  font-size: 20px;
+  line-height: 1;
+}
+.stepper button:disabled {
+  color: var(--dim);
+}
+.stepper output {
+  min-width: 34px;
+  text-align: center;
+  font-family: var(--num);
+  font-weight: 800;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+/* iOS-style switch on a real checkbox (accessible, keyboard friendly). */
+.tgl {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 50px;
+  height: 30px;
+  margin: 0;
+  border-radius: 15px;
+  background: var(--panel2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  position: relative;
+  flex: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.tgl::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s;
+}
+.tgl:checked {
+  background: var(--ok);
+  box-shadow: none;
+}
+.tgl:checked::after {
+  transform: translateX(20px);
+}
+.env-line {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--dim);
+  text-align: center;
+  word-break: break-word;
+}
+
+/* ---------- Camera stage (Placement + Challenge) ---------- */
+.stage {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  max-width: var(--app-w);
+  overflow: hidden;
+  background: #000;
+  isolation: isolate;
+  touch-action: manipulation;
+  /* Width taken by the debug column docked on the right (laptops only; 0 otherwise). */
+  --dock: 0px;
+}
+.stage video,
+.stage .overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% - var(--dock));
+  height: 100%;
+}
+.stage video {
+  object-fit: cover;
+  background: #000;
+}
+.stage .overlay {
+  z-index: 1;
+  pointer-events: none;
+}
+/* Selfie view: mirror the picture AND the skeleton the same way. The
+   landmarks themselves stay unmirrored (that is what the algorithm sees). */
+.stage.mirror video,
+.stage.mirror .overlay {
+  transform: scaleX(-1);
+}
+/* Demo: no camera, so paint the design's dark "camera picture" instead of the video. */
+.stage.demo {
+  background:
+    radial-gradient(120% 60% at 50% 28%, rgba(255, 220, 170, 0.1), transparent 60%),
+    linear-gradient(180deg, #151210 0%, #2a241e 58%, #4a4034 74%, #3a3128 100%);
+}
+.stage.demo video {
+  visibility: hidden;
+}
+.demo-tag {
+  display: none;
+  position: absolute;
+  right: calc(var(--dock) + var(--sr) + 14px);
+  bottom: calc(var(--sb) + 16px);
+  z-index: 6;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 13px;
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 212, 59, 0.45);
+  color: var(--volt);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.demo-tag-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+/* Back to the Start screen from the demo (Esc does the same). */
+.demo-exit {
+  pointer-events: auto;
+  margin-right: -6px;
+  height: 20px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--volt);
+  color: var(--volt-ink);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.demo-exit:hover {
+  filter: brightness(1.08);
+}
+.demo-tag svg {
+  width: 11px;
+  height: 11px;
+}
+.stage.demo .demo-tag {
+  display: inline-flex;
+}
+/* Phones: just "Demo", so it fits beside Give up. */
+.demo-tag-more {
+  display: none;
+}
+/* Narrow phones (iPhone SE/mini): only "✕ Exit demo", which still says demo, so it clears Give up. */
+@media (max-width: 400px) {
+  .demo-tag-label {
+    display: none;
+  }
+}
+.vignette {
+  position: absolute;
+  inset: 0 var(--dock) 0 0;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: inset 0 0 110px rgba(0, 0, 0, 0.6);
+}
+.scrim-top,
+.scrim-bot {
+  position: absolute;
+  left: 0;
+  right: var(--dock);
+  z-index: 2;
+  pointer-events: none;
+}
+.scrim-top {
+  top: 0;
+  height: calc(var(--st) + 300px);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.45) 60%, transparent);
+}
+.scrim-bot {
+  bottom: 0;
+  height: calc(var(--sb) + 240px);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.85), transparent);
+}
+.layer {
+  position: absolute;
+  inset: 0 var(--dock) 0 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  /* Bottom padding leaves room for the Give up link and the debug chip. */
+  padding: calc(var(--st) + 14px) calc(var(--sr) + 16px) calc(var(--sb) + 58px) calc(var(--sl) + 16px);
+  pointer-events: none;
+}
+
+/* ----- Spec 3: Placement ----- */
+.place-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.place-head .h-l {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+.diagram {
+  padding: 10px 10px 6px;
+  background: rgba(23, 23, 27, 0.86);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.diagram svg {
+  display: block;
+}
+.place-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+}
+.hint .ico {
+  width: 36px;
+  height: 36px;
+  color: var(--volt);
+}
+.inframe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 50px;
+  border-radius: 16px;
+  background: var(--ok);
+  color: #03230a;
+  font-size: 20px;
+  font-weight: 800;
+}
+.inframe svg {
+  width: 24px;
+  height: 24px;
+}
+.countdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cd-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+.cd-label {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding-bottom: 8px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+.cd-label span {
+  color: var(--mute);
+  font-weight: 500;
+}
+.cd-n {
+  font-size: 150px;
+  font-size: min(150px, 20dvh);
+  color: var(--volt);
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+}
+.cd-n.tick {
+  animation: bump 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+/* Fills the open camera area between the diagram card and the bottom block. */
+.frame-ok {
+  flex: 1 1 auto;
+  min-height: 60px;
+  margin: 12px 0;
+  border-radius: 18px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--ok), var(--ok)) top left/32px 5px no-repeat,
+    linear-gradient(var(--ok), var(--ok)) top left/5px 32px no-repeat,
+    linear-gradient(var(--ok), var(--ok)) top right/32px 5px no-repeat,
+    linear-gradient(var(--ok), var(--ok)) top right/5px 32px no-repeat,
+    linear-gradient(var(--ok), var(--ok)) bottom left/32px 5px no-repeat,
+    linear-gradient(var(--ok), var(--ok)) bottom left/5px 32px no-repeat,
+    linear-gradient(var(--ok), var(--ok)) bottom right/32px 5px no-repeat,
+    linear-gradient(var(--ok), var(--ok)) bottom right/5px 32px no-repeat;
+}
+
+/* ----- Spec 4: Challenge ----- */
+.ch-top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.segs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+}
+.segs i {
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.18);
+  transition: background 0.25s;
+}
+.segs i.on {
+  background: var(--volt);
+}
+.ch-chips {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  margin-top: 2px;
+}
+.voice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px 0 9px;
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.voice svg {
+  width: 16px;
+  height: 16px;
+  color: var(--volt);
+}
+.voice .w {
+  color: var(--volt);
+}
+.voice.say {
+  animation: say 0.7s ease-out;
+}
+.pill.nocount {
+  background: rgba(255, 159, 10, 0.2);
+  color: var(--warn);
+}
+.pill.paused-pill {
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--fg);
+}
+.counter {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin-top: -14px;
+  transition: opacity 0.3s;
+}
+.counter .n {
+  /* "The count is the screen": 200 px, shrunk a little on short Safari viewports. */
+  font-size: 200px;
+  font-size: min(200px, 27dvh);
+  color: var(--volt);
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+  transition:
+    font-size 0.3s,
+    color 0.3s;
+}
+.counter .of {
+  font-family: var(--num);
+  font-weight: 800;
+  font-size: 58px;
+  line-height: 1;
+  opacity: 0.92;
+  padding-bottom: 10px;
+  transition: font-size 0.3s;
+}
+.counter.bump .n {
+  animation: bump 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+.ch-mid {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 140px;
+}
+.glabel {
+  position: absolute;
+  right: -10px;
+  top: 0;
+  font-family: var(--num);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--volt);
+}
+/* The gauge's volt mark sits at 80% height = the rep's depth threshold. */
+.gauge {
+  position: absolute;
+  right: -4px;
+  top: 22px;
+  bottom: 84px;
+  max-height: 240px;
+  width: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.gauge .f {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  background: var(--fg);
+  border-radius: 8px;
+}
+.gauge .f.hit {
+  background: var(--volt);
+}
+.gauge .f.warn {
+  background: var(--warn);
+}
+.gauge .mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--volt);
+  top: calc(20% - 1px);
+  z-index: 2;
+}
+.cue {
+  position: absolute;
+  left: 0;
+  right: 28px;
+  bottom: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--warn);
+  color: #1d0f00;
+  font-family: var(--num);
+  font-weight: 900;
+  font-size: 40px;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+.cue svg {
+  width: 30px;
+  height: 30px;
+}
+.cue.off {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.cue-small {
+  position: absolute;
+  left: 0;
+  right: 28px;
+  bottom: 18px;
+  display: flex;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(255, 159, 10, 0.5);
+  color: var(--warn);
+  font-size: 17px;
+  font-weight: 750;
+  text-align: center;
+}
+.ghost-sil {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  width: 200px;
+  height: min(200px, calc(100% - 10px)); /* top: 10px, so it never spills out of .ch-mid */
+  margin-left: -100px;
+  border: 3px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 100px 100px 30px 30px;
+}
+.lost {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+}
+.lost-title {
+  font-family: var(--num);
+  font-weight: 900;
+  font-size: 56px;
+  line-height: 0.9;
+  text-transform: uppercase;
+  white-space: pre-line;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7);
+}
+.lost-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.lost-tips .row {
+  gap: 10px;
+}
+.lost-tips .ico {
+  color: var(--volt);
+}
+/* S2 paused: count dims and shrinks, gauge and cues step aside. */
+.challenge.paused .counter {
+  opacity: 0.5;
+  margin-top: 0;
+}
+.challenge.paused .counter .n {
+  font-size: 110px;
+  color: var(--fg);
+}
+.challenge.paused .counter .of {
+  font-size: 36px;
+  padding-bottom: 6px;
+}
+.challenge.paused .gauge,
+.challenge.paused .glabel,
+.challenge.paused .cue {
+  display: none;
+}
+.challenge.paused .ch-mid {
+  /* Shrinks on short screens (an iPhone SE with Safari's bars) so the tips
+     stay above Give up; the ghost outline shrinks with it. */
+  flex: 0 1 210px;
+  min-height: 0;
+}
+
+/* ----- S3: Too dark ----- */
+.dark-ov {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  /* Nearly opaque: one fix, one icon, huge type (spec S3) — no other words should compete. */
+  background: rgba(5, 5, 4, 0.9);
+}
+.dark-ov .sun {
+  width: 96px;
+  height: 96px;
+  border-radius: 48px;
+  background: var(--volt);
+  color: var(--volt-ink);
+  display: grid;
+  place-items: center;
+}
+.dark-ov .sun svg {
+  width: 54px;
+  height: 54px;
+}
+.dark-title {
+  font-family: var(--num);
+  font-weight: 900;
+  font-size: 60px;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+.dark-sub {
+  font-size: 19px;
+  font-weight: 650;
+}
+
+/* ----- Shared stage chrome ----- */
+.giveup {
+  position: absolute;
+  left: calc((100% - var(--dock)) / 2);
+  bottom: calc(var(--sb) + 10px);
+  transform: translateX(-50%);
+  z-index: 6;
+  border: 0;
+  background: none;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.42);
+  white-space: nowrap;
+}
+.toast {
+  position: absolute;
+  left: calc(var(--sl) + 16px);
+  right: calc(var(--sr) + 16px);
+  top: 45%;
+  z-index: 6;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.75);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  pointer-events: none;
+}
+.loading-ov {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: calc(var(--st) + 32px) calc(var(--sr) + 28px) calc(var(--sb) + 32px) calc(var(--sl) + 28px);
+  text-align: center;
+  background: rgba(11, 11, 13, 0.92);
+}
+.loading-msg {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 750;
+}
+.loading-err {
+  width: 100%;
+  max-width: 340px;
+}
+.spin {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid var(--dim);
+  border-top-color: var(--volt);
+  animation: spin 1s linear infinite;
+}
+.resume-ov {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px;
+  border: 0;
+  background: rgba(11, 11, 13, 0.94);
+  text-align: center;
+}
+.resume-ic {
+  width: 112px;
+  height: 112px;
+  border-radius: 56px;
+  background: var(--volt);
+  color: var(--volt-ink);
+  display: grid;
+  place-items: center;
+}
+.resume-ic svg {
+  width: 52px;
+  height: 52px;
+  margin-left: 6px;
+}
+.resume-t {
+  font-family: var(--num);
+  font-weight: 900;
+  font-size: 48px;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+/* ----- Debug view ----- */
+.debug {
+  position: absolute;
+  left: calc(var(--sl) + 8px);
+  right: calc(var(--sr) + 8px);
+  bottom: calc(var(--sb) + 10px);
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+.dbg-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.dbg-chip {
+  pointer-events: auto;
+  height: 30px;
+  max-width: 34%;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  color: var(--fg);
+  font: 600 11px/1 var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dbg-chip.warn {
+  background: rgba(255, 159, 10, 0.25);
+  box-shadow: inset 0 0 0 1px var(--warn);
+  color: var(--warn);
+  font-family: var(--ui);
+}
+.dbg-chip[aria-expanded='true'] .chev {
+  display: inline-block;
+  transform: rotate(180deg);
+}
+.dbg-body {
+  pointer-events: auto;
+  max-height: 46vh;
+  max-height: 46dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.74);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #d9d9dc;
+  font: 11px/1.4 var(--mono);
+}
+.dbg-stats {
+  margin: 0;
+  font: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.dbg-chart {
+  display: block;
+  width: 100%;
+  height: 76px;
+  margin-top: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+.dbg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 4px;
+  color: var(--mute);
+  font-size: 10px;
+}
+.dbg-legend span {
+  white-space: nowrap;
+}
+.dbg-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 3px;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+.dbg-legend .k-down {
+  background: var(--volt);
+}
+.dbg-legend .k-partial {
+  background: var(--warn);
+}
+.dbg-legend .k-up {
+  background: rgba(255, 255, 255, 0.55);
+}
+.dbg-legend .k-rep {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--volt);
+}
+.dbg-legend .k-miss {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--warn);
+}
+.dbg-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+.dbg-sliders label {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 8px;
+}
+.dbg-sliders input {
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  accent-color: var(--volt);
+}
+.dbg-sliders output {
+  text-align: right;
+  color: var(--fg);
+}
+.dbg-h {
+  margin-top: 10px;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+}
+.dbg-events {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.dbg-events li.rep {
+  color: var(--volt);
+}
+.dbg-events li.partial {
+  color: var(--warn);
+}
+.dbg-rec {
+  margin: 2px 0 0;
+}
+
+/* ---------- 5. Success (full-bleed volt) ---------- */
+.success {
+  background: var(--volt);
+  color: var(--volt-ink);
+}
+.succ-title {
+  margin: 0;
+  font-family: var(--num);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 40px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.succ-time {
+  font-size: 132px;
+  margin: 14px 0 6px -4px;
+}
+.succ-sub {
+  font-size: 22px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+.succ-note {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+.succ-stats {
+  gap: 6px;
+  margin-top: 22px;
+  font-size: 15px;
+  font-weight: 700;
+  opacity: 0.8;
+}
+.succ-stats svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Error log + boot failure ---------- */
+.errlog {
+  position: fixed;
+  top: calc(var(--st) + 6px);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  max-width: var(--app-w);
+  padding: 0 calc(var(--sr) + 8px) 0 calc(var(--sl) + 8px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+.errlog-badge {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--bad);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.errlog-badge svg {
+  width: 14px;
+  height: 14px;
+}
+.errlog-panel {
+  pointer-events: auto;
+  width: 100%;
+  max-height: 60vh;
+  max-height: 60dvh;
+  overflow-y: auto;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(23, 23, 27, 0.97);
+  box-shadow: 0 0 0 1px var(--line), 0 20px 40px rgba(0, 0, 0, 0.6);
+  font-size: 13px;
+}
+.errlog-panel button {
+  border: 0;
+  border-radius: 8px;
+  background: var(--panel2);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.errlog-panel ol {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.errlog-panel li {
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 69, 58, 0.1);
+  font: 11px/1.4 var(--mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.errlog-panel li b {
+  color: #ffb4ae;
+}
+.boot-fail {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: calc(var(--st) + 24px) calc(var(--sr) + 20px) calc(var(--sb) + 24px) calc(var(--sl) + 20px);
+  background: var(--page);
+  overflow-y: auto;
+}
+.boot-fail pre {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--panel);
+  font: 11px/1.4 var(--mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------- Laptop / desktop / wide screens ----------
+   A laptop on the floor, screen tilted back, user ~3 ft away. The camera
+   stage fills the window, the WHOLE camera picture stays visible (contain,
+   so head and hands are never cropped; app.ts reads object-fit and maps the
+   figure to match), everything on it is bigger, and the debug panel docks
+   as a column on the right instead of covering the picture. */
+@media (min-aspect-ratio: 1/1) and (min-width: 700px) {
+  .stage {
+    max-width: none;
+    --dock-w: min(340px, 34vw);
+  }
+  /* Debug panel open: the picture, figure and screens move left to make room for it. */
+  .stage:has(> .debug:not([hidden]) > .dbg-body:not([hidden])) {
+    --dock: var(--dock-w);
+  }
+  .stage video {
+    object-fit: contain;
+  }
+  .layer {
+    padding: calc(var(--st) + 18px) calc(var(--sr) + 24px) calc(var(--sb) + 64px) calc(var(--sl) + 24px);
+  }
+  .scrim-top {
+    height: calc(var(--st) + 42vh);
+  }
+
+  /* Placement */
+  .place-head {
+    max-width: 480px;
+  }
+  .place-head .h-l {
+    font-size: 28px;
+  }
+  /* Bottom-left, compact: the middle of the picture is where the person is. */
+  .place-foot {
+    max-width: 540px;
+  }
+  .hint {
+    font-size: clamp(26px, 4.6vh, 42px);
+  }
+  .hint .ico {
+    width: 46px;
+    height: 46px;
+  }
+  .inframe {
+    height: 62px;
+    font-size: 26px;
+  }
+  .inframe svg {
+    width: 30px;
+    height: 30px;
+  }
+  .cd-label {
+    font-size: clamp(22px, 3.8vh, 34px);
+  }
+  .cd-n {
+    font-size: clamp(120px, 26vh, 260px);
+  }
+
+  /* Challenge: the count stays the screen, sized from the window height. */
+  .segs i {
+    height: 10px;
+    border-radius: 5px;
+  }
+  .ch-chips {
+    min-height: 40px;
+  }
+  .ch-chips .pill {
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 19px;
+    font-size: 17px;
+  }
+  .ch-chips .pill svg {
+    width: 19px;
+    height: 19px;
+  }
+  .voice {
+    height: 40px;
+    padding: 0 16px 0 12px;
+    border-radius: 20px;
+    font-size: 17px;
+  }
+  .voice svg {
+    width: 21px;
+    height: 21px;
+  }
+  .counter .n {
+    font-size: clamp(120px, 28vh, 300px);
+  }
+  .counter .of {
+    font-size: clamp(44px, 8vh, 88px);
+    padding-bottom: 1.6vh;
+  }
+  .glabel {
+    right: -6px;
+    font-size: 19px;
+  }
+  .gauge {
+    width: 24px;
+    right: 0;
+    top: 30px;
+    max-height: 46vh;
+    border-radius: 12px;
+  }
+  .gauge .f {
+    border-radius: 12px;
+  }
+  .gauge .mark {
+    height: 4px;
+  }
+  /* Cues: centred under the figure, big enough to read from the floor. */
+  .cue,
+  .cue-small {
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: min(600px, 78%);
+  }
+  .cue {
+    height: 92px;
+    border-radius: 28px;
+    font-size: 64px;
+  }
+  .cue svg {
+    width: 46px;
+    height: 46px;
+  }
+  .cue-small {
+    font-size: 24px;
+    padding: 14px 20px;
+  }
+  .ghost-sil {
+    width: 260px;
+    height: min(260px, calc(100% - 10px));
+    margin-left: -130px;
+    border-radius: 130px 130px 40px 40px;
+  }
+  .lost-title {
+    font-size: clamp(56px, 11vh, 100px);
+  }
+  .lost-tips {
+    font-size: 21px;
+  }
+  .lost-tips .ico {
+    width: 26px;
+    height: 26px;
+  }
+  .challenge.paused .counter .n {
+    font-size: clamp(80px, 15vh, 150px);
+  }
+  .challenge.paused .counter .of {
+    font-size: clamp(32px, 5vh, 52px);
+  }
+  .challenge.paused .ch-mid {
+    flex-basis: 30vh;
+  }
+
+  /* Shared chrome */
+  .giveup {
+    font-size: 16px;
+    padding: 14px 22px;
+  }
+  .toast {
+    left: 0;
+    right: var(--dock);
+    margin: 0 auto;
+    width: min(560px, 80%);
+    font-size: 18px;
+  }
+  .demo-tag {
+    right: auto;
+    left: calc(var(--sl) + 16px);
+    height: 34px;
+    font-size: 13px;
+  }
+  .demo-exit {
+    height: 26px;
+    padding: 0 12px;
+    border-radius: 13px;
+  }
+  .demo-tag-more {
+    display: inline;
+  }
+  .dark-title {
+    font-size: 84px;
+  }
+  .dark-sub {
+    font-size: 24px;
+  }
+
+  /* Debug: a column docked on the right; collapsed, only its chip shows (bottom right). */
+  .debug {
+    left: auto;
+    right: calc(var(--sr) + 10px);
+    top: calc(var(--st) + 10px);
+    bottom: calc(var(--sb) + 10px);
+    width: calc(var(--dock-w) - 20px);
+    justify-content: flex-end;
+  }
+  .dbg-body {
+    flex: 1 1 auto;
+    max-height: none;
+  }
+  .dbg-bar {
+    justify-content: flex-end;
+  }
+  .dbg-chip {
+    max-width: 100%;
+  }
+  .dbg-chart {
+    height: 96px;
+  }
+}
+
+/* Start, Success, Gave up and Camera screens on a wide window: the same
+   centred column, with a little more air. */
+@media (min-width: 700px) {
+  .screen {
+    padding-top: calc(var(--st) + 44px);
+    padding-bottom: calc(var(--sb) + 36px);
+  }
+}
+
+/* ---------- Animations ---------- */
+@keyframes bump {
+  0% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes say {
+  0% {
+    box-shadow: inset 0 0 0 2px var(--volt);
+  }
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ----- "+1" on every counted rep -----
+   Pops up just above the head and floats away. Big and volt so it reads
+   from the floor; the counter itself still holds the real number. With
+   reduced motion (rule above) it simply shows, and challengeView removes it
+   after 1.5 s. */
+.plus-one {
+  position: absolute;
+  z-index: 6;
+  font-family: var(--num);
+  font-weight: 900;
+  font-size: clamp(56px, 11vh, 128px);
+  line-height: 1;
+  color: var(--volt);
+  text-shadow:
+    0 0 2px #000,
+    0 4px 24px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  animation: plus-one 950ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes plus-one {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.6);
+  }
+  14% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  30% {
+    transform: translate(-50%, -60%) scale(1);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -170%) scale(1);
+  }
+}

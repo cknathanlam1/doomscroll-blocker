@@ -1,0 +1,29 @@
+{
+  "name": "doomscroll-blocker-pushup-prototype",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Web prototype for camera-based push-up detection (Doomscroller Blocker).",
+  "scripts": {
+    "predev": "node scripts/copy-mediapipe-wasm.mjs",
+    "dev": "vite",
+    "predev:laptop": "node scripts/copy-mediapipe-wasm.mjs",
+    "dev:laptop": "vite --mode laptop",
+    "prebuild": "node scripts/copy-mediapipe-wasm.mjs",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "golden": "vitest run --config vitest.golden.config.ts",
+    "typecheck": "tsc --noEmit",
+    "tunnel": "cloudflared tunnel --url https://localhost:5173 --no-tls-verify"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "1.0.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  }
+}

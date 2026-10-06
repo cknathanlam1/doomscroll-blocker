@@ -1,0 +1,982 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Doomscroller Blocker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,800;1,900&display=swap">
+<style>
+/* Layout: a storyboard of horizontal lanes, phones read left→right; one dark world, one volt accent. Single theme by choice. */
+:root{
+  color-scheme: dark;
+  --page:#0B0B0D; --panel:#17171B; --panel2:#202026; --line:#2C2C33; --bezel:#3A3A42;
+  --fg:#F5F5F2; --mute:#8E8E96; --dim:#55555D; --black:#000;
+  --volt:#FFD43B; --volt-ink:#191300; --volt-soft:rgba(255,212,59,.14);
+  --ok:#32D74B; --warn:#FF9F0A; --bad:#FF453A;
+  --cam1:#151210; --cam2:#2a241e; --cam3:#4a4034;
+  --wall1:#1b1a2e; --wall2:#0a0a12;
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",system-ui,sans-serif;
+  --num:"Barlow Condensed","SF Pro Display",-apple-system,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--page);color:var(--fg);font-family:var(--ui);font-size:15px;line-height:1.45;padding-inline:20px;padding-block:36px 72px;margin:0}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--volt);outline-offset:3px}
+
+/* Header */
+.mast{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:32px;align-items:end}
+@media (max-width:820px){.mast{grid-template-columns:minmax(0,1fr)}}
+.mast h1{font-family:var(--num);font-weight:900;font-size:clamp(52px,9vw,112px);line-height:.86;letter-spacing:-.01em;text-transform:uppercase;margin:0;text-wrap:balance}
+.mast h1 em{font-style:italic;color:var(--volt)}
+.mast .tag-line{font-family:var(--num);font-style:italic;font-weight:800;font-size:28px;color:var(--volt);margin:14px 0 0;text-transform:uppercase;letter-spacing:.02em}
+.mast p.lede{color:var(--mute);max-width:60ch;margin:10px 0 0}
+.rules{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.rules li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;font-size:14px;color:var(--mute)}
+.rules li b{color:var(--fg);font-weight:600;display:block}
+.rules svg{width:22px;height:22px;color:var(--volt);margin-top:1px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--mute)}
+
+/* Sections */
+.sec-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:18px;margin-bottom:22px}
+.sec-h h2{font-family:var(--num);font-weight:800;font-size:34px;text-transform:uppercase;margin:0;letter-spacing:.01em}
+.sec-h p{color:var(--mute);margin:0;font-size:14px;max-width:70ch}
+.rail{overflow-x:auto;padding-bottom:18px;scrollbar-color:var(--line) transparent}
+.lane{display:flex;align-items:flex-start;gap:10px;width:max-content;padding-right:20px}
+.lane + .lane{margin-top:40px}
+
+/* Tag chips */
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:6px;font-family:var(--num);font-weight:800;font-size:14px;letter-spacing:.08em}
+.tag.sprint{background:var(--volt);color:var(--volt-ink)}
+.tag.later{box-shadow:inset 0 0 0 1.5px var(--mute);color:var(--mute)}
+
+/* Shot + caption */
+.shot{flex:none;width:300px;display:flex;flex-direction:column;gap:14px}
+.shot.hero{width:375px}
+.hero .phone{zoom:1.25}
+.cap{display:flex;flex-direction:column;gap:6px;padding:0 4px}
+.cap .t{display:flex;align-items:center;gap:10px}
+.cap b{font-weight:650;font-size:15px}
+.cap b span{color:var(--mute);font-variant-numeric:tabular-nums;margin-right:6px}
+.cap p{margin:0;color:var(--mute);font-size:13px;line-height:1.45}
+
+/* Links between shots */
+.link{flex:none;width:92px;align-self:flex-start;margin-top:280px;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--mute);font-size:12px;text-align:center;line-height:1.3}
+.link svg{width:72px;height:14px;color:var(--dim)}
+.link.hot{color:var(--volt)} .link.hot svg{color:var(--volt)}
+.hero-row .link{margin-top:360px}
+.node{flex:none;width:168px;align-self:flex-start;margin-top:230px;border:1.5px dashed var(--line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--mute)}
+.node strong{color:var(--fg);font-size:14px;font-weight:600}
+.node .mini{display:flex;align-items:center;gap:8px}
+.hero-row .node{margin-top:310px}
+
+/* Phone frame */
+.phone{width:300px;height:650px;border-radius:50px;background:var(--black);padding:9px;box-shadow:0 0 0 1.5px var(--bezel),0 40px 70px -30px rgba(0,0,0,.9)}
+.scr{position:relative;width:282px;height:632px;border-radius:41px;overflow:hidden;background:var(--black);display:flex;flex-direction:column;padding:54px 18px 30px;gap:0}
+.sb{position:absolute;inset:0 0 auto 0;height:48px;display:flex;align-items:center;justify-content:space-between;padding:4px 24px 0 34px;font-size:14.5px;font-weight:600;z-index:6;color:var(--fg);pointer-events:none}
+.sb.dark{color:var(--volt-ink)}
+.sb .ic{display:flex;gap:5px;align-items:center}
+.island{position:absolute;left:50%;top:11px;width:94px;height:27px;margin-left:-47px;background:var(--black);border-radius:20px;z-index:7}
+.hi{position:absolute;bottom:8px;left:50%;width:106px;height:4px;margin-left:-53px;border-radius:3px;background:var(--fg);opacity:.9;z-index:6}
+.hi.dark{background:var(--volt-ink)}
+
+/* Screen building blocks */
+.grow{flex:1 1 auto;min-height:0}
+.col{display:flex;flex-direction:column}
+.g4{gap:4px}.g8{gap:8px}.g12{gap:12px}.g16{gap:16px}.g20{gap:20px}
+.center{align-items:center;text-align:center}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.h-xl{font-size:30px;font-weight:800;line-height:1.08;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.h-l{font-size:25px;font-weight:750;line-height:1.12;letter-spacing:-.015em;margin:0;text-wrap:balance}
+.txt{font-size:15px;color:var(--mute);margin:0;line-height:1.4}
+.small{font-size:12.5px;color:var(--mute);margin:0;line-height:1.4}
+.big{font-family:var(--num);font-weight:900;line-height:.82;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:16px;border:0;font-size:17px;font-weight:650;width:100%;cursor:default}
+.btn svg{width:18px;height:18px}
+.btn.pri{background:var(--volt);color:var(--volt-ink)}
+.btn.sec{background:var(--panel2);color:var(--fg)}
+.btn.blk{background:var(--volt-ink);color:var(--volt)}
+.btn.ghost{background:none;color:var(--mute);height:40px;font-size:15px;font-weight:500}
+.btn.ghost.y{color:var(--volt)}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:6px;height:6px;border-radius:3px;background:var(--dim)}
+.dots i.on{width:18px;background:var(--volt)}
+.ico{width:20px;height:20px;flex:none}
+.card{background:var(--panel);border-radius:18px;padding:14px}
+.row{display:flex;align-items:center;gap:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:14px;font-size:13px;font-weight:650}
+.pill svg{width:15px;height:15px}
+.pill.lock{background:var(--panel2);color:var(--fg)}
+.pill.open{background:var(--volt);color:var(--volt-ink)}
+.appi{width:40px;height:40px;border-radius:10px;flex:none;display:grid;place-items:center}
+.appi.ours{background:var(--volt);color:var(--volt-ink);font-family:var(--num);font-weight:900;font-size:22px;letter-spacing:-.03em}
+.appi.vid{background:#3a3a40;color:var(--fg)}
+.appi.vid svg{width:18px;height:18px}
+.appi.sc{background:linear-gradient(135deg,#5b5bd6,#c64fd1);color:#fff}
+.appi.sc svg{width:20px;height:20px}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;font-size:14px;line-height:1.35;color:var(--fg)}
+.steps li::before{counter-increment:s;content:counter(s);width:26px;height:26px;border-radius:13px;background:var(--panel2);display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--volt)}
+.steps li.done::before{content:"✓";background:var(--volt);color:var(--volt-ink)}
+.steps em{font-style:normal;font-weight:650}
+.steps small{display:block;color:var(--mute);font-size:12.5px}
+
+/* Camera feed */
+.cam{background:
+  radial-gradient(120% 60% at 50% 28%,rgba(255,220,170,.10),transparent 60%),
+  linear-gradient(180deg,var(--cam1) 0%,var(--cam2) 58%,var(--cam3) 74%,#3a3128 100%)}
+.cam::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 110px rgba(0,0,0,.75);pointer-events:none;z-index:1}
+.cam.dark{background:linear-gradient(180deg,#050504 0%,#0b0a09 60%,#13110e 100%)}
+.skel{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.scrim-top{position:absolute;inset:0 0 auto 0;height:300px;background:linear-gradient(180deg,rgba(0,0,0,.82),rgba(0,0,0,.45) 60%,transparent);z-index:2}
+.scrim-bot{position:absolute;inset:auto 0 0 0;height:190px;background:linear-gradient(0deg,rgba(0,0,0,.85),transparent);z-index:2}
+.over{position:relative;z-index:3}
+
+/* Challenge */
+.segs{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.segs i{height:7px;border-radius:4px;background:rgba(255,255,255,.18);transition:background .25s}
+.segs i.on{background:var(--volt)}
+.counter{display:flex;align-items:flex-end;gap:2px;margin-top:6px}
+.counter .n{font-size:200px;color:var(--volt);text-shadow:0 4px 30px rgba(0,0,0,.6)}
+.counter .of{font-family:var(--num);font-weight:800;font-size:58px;line-height:1;color:var(--fg);opacity:.92;padding-bottom:10px}
+.counter.bump .n{animation:bump .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes bump{0%{transform:scale(1.18);}100%{transform:scale(1)}}
+.voice{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px 0 9px;border-radius:15px;background:rgba(0,0,0,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);font-size:13px;font-weight:650;color:var(--fg)}
+.voice svg{width:16px;height:16px;color:var(--volt)}
+.voice .w{color:var(--volt)}
+.voice.say{animation:say .7s ease-out}
+@keyframes say{0%{box-shadow:inset 0 0 0 2px var(--volt)}100%{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}}
+.cue{white-space:nowrap;position:absolute;left:18px;right:44px;top:470px;z-index:4;display:flex;align-items:center;justify-content:center;gap:8px;height:64px;border-radius:20px;background:var(--warn);color:#1d0f00;font-family:var(--num);font-weight:900;font-size:40px;text-transform:uppercase;letter-spacing:.01em;transition:opacity .2s,transform .2s}
+.cue svg{width:30px;height:30px;stroke-width:3.2}
+.cue.off{opacity:0;transform:translateY(8px)}
+.gauge{position:absolute;right:12px;top:286px;width:16px;height:170px;border-radius:8px;background:rgba(255,255,255,.14);z-index:4;overflow:hidden}
+.gauge .f{position:absolute;inset:auto 0 0 0;height:0;background:var(--fg);border-radius:8px}
+.gauge .f.hit{background:var(--volt)}
+.gauge .mark{position:absolute;left:-3px;right:-3px;height:3px;background:var(--volt);top:calc(20% - 1px);z-index:2}
+.glabel{position:absolute;right:6px;top:262px;z-index:4;font-family:var(--num);font-weight:800;font-size:14px;color:var(--volt)}
+.giveup{position:absolute;left:0;right:0;bottom:26px;z-index:4;text-align:center;font-size:13px;color:rgba(255,255,255,.42);font-weight:500}
+.done-ov{position:absolute;inset:0;z-index:5;background:var(--volt);color:var(--volt-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:opacity .3s}
+.done-ov .big{font-size:150px}
+.done-ov.off{opacity:0;pointer-events:none}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap}
+.ctrls button{height:34px;padding:0 13px;border-radius:17px;border:0;background:var(--panel2);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.ctrls button svg{width:14px;height:14px}
+.ctrls button:hover{background:var(--line)}
+.ctrls button[aria-pressed="true"]{background:var(--volt);color:var(--volt-ink)}
+
+/* Misc screen pieces */
+.frame-ok{position:absolute;inset:18px;border-radius:18px;z-index:3;pointer-events:none;
+  background:
+  linear-gradient(var(--ok),var(--ok)) top left/28px 4px no-repeat,linear-gradient(var(--ok),var(--ok)) top left/4px 28px no-repeat,
+  linear-gradient(var(--ok),var(--ok)) top right/28px 4px no-repeat,linear-gradient(var(--ok),var(--ok)) top right/4px 28px no-repeat,
+  linear-gradient(var(--ok),var(--ok)) bottom left/28px 4px no-repeat,linear-gradient(var(--ok),var(--ok)) bottom left/4px 28px no-repeat,
+  linear-gradient(var(--ok),var(--ok)) bottom right/28px 4px no-repeat,linear-gradient(var(--ok),var(--ok)) bottom right/4px 28px no-repeat}
+.inframe{display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:16px;background:var(--ok);color:#03230a;font-size:20px;font-weight:800}
+.inframe svg{width:24px;height:24px;stroke-width:3}
+.preview{position:relative;height:262px;border-radius:22px;overflow:hidden}
+.ghost-sil{position:absolute;left:50%;top:150px;width:200px;height:230px;margin-left:-100px;border:3px dashed rgba(255,255,255,.5);border-radius:100px 100px 30px 30px;z-index:3}
+.iosnav{display:flex;align-items:center;justify-content:space-between;height:40px}
+.iosbtn{width:36px;height:36px;border-radius:18px;background:var(--panel2);display:grid;place-items:center;color:var(--fg)}
+.iosbtn svg{width:20px;height:20px}
+.group{background:var(--panel);border-radius:14px;overflow:hidden}
+.group .it{display:flex;align-items:center;gap:11px;min-height:46px;padding:0 14px;font-size:15px;position:relative}
+.group .it + .it::before{content:"";position:absolute;top:0;left:14px;right:0;height:1px;background:var(--line)}
+.group .it .r{margin-left:auto;color:var(--mute);display:flex;align-items:center;gap:6px;font-size:15px}
+.group .it .r svg{width:14px;height:14px;color:var(--dim)}
+.glabel2{font-size:12.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;padding:0 14px 6px}
+.gfoot{font-size:12px;color:var(--mute);padding:6px 14px 0;line-height:1.35}
+.tgl{width:50px;height:30px;border-radius:15px;background:var(--ok);position:relative;flex:none}
+.tgl::after{content:"";position:absolute;right:2px;top:2px;width:26px;height:26px;border-radius:13px;background:#fff}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--panel2);border-radius:9px;padding:2px;gap:2px;font-size:13px;font-weight:600}
+.seg span{height:28px;display:grid;place-items:center;border-radius:7px;color:var(--mute)}
+.seg span.on{background:#636366;color:var(--fg)}
+.stepper{display:flex;background:var(--panel2);border-radius:9px;height:32px;overflow:hidden}
+.stepper span{width:44px;display:grid;place-items:center;font-size:20px;color:var(--fg)}
+.stepper span+span{box-shadow:inset 1px 0 0 var(--line)}
+.stat{background:var(--panel);border-radius:16px;padding:12px 13px;display:flex;flex-direction:column;gap:2px}
+.stat .big{font-size:44px;color:var(--fg)}
+.stat.y .big{color:var(--volt)}
+.stat .l{font-size:12px;color:var(--mute);font-weight:500}
+.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;align-items:end;height:54px}
+.bars i{display:block;background:var(--panel2);border-radius:4px}
+.bars i.on{background:var(--volt)}
+.blabels{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;font-size:10.5px;color:var(--mute);text-align:center}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:62px;background:var(--panel);border-radius:22px 22px 0 0;z-index:5;padding:10px 18px 30px;display:flex;flex-direction:column;gap:14px}
+.sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--dim);margin:0 auto 2px}
+.dimmer{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:4}
+.under{transform:scale(.94) translateY(6px);transform-origin:top center;opacity:.6}
+.lockscr{background:radial-gradient(90% 60% at 30% 20%,#2d2a55 0%,transparent 70%),radial-gradient(80% 60% at 80% 90%,#3a2a18 0%,transparent 70%),linear-gradient(180deg,var(--wall1),var(--wall2))}
+.lk-time{font-family:var(--ui);font-weight:700;font-size:82px;line-height:1;letter-spacing:-.03em;text-align:center;color:rgba(255,255,255,.92)}
+.lk-date{text-align:center;font-size:17px;font-weight:600;color:rgba(255,255,255,.8)}
+.la{background:rgba(20,20,24,.82);backdrop-filter:blur(20px);border-radius:24px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.prog{height:6px;border-radius:3px;background:rgba(255,255,255,.16);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--volt);border-radius:3px}
+.notif{background:rgba(40,40,46,.86);backdrop-filter:blur(20px);border-radius:20px;padding:12px 13px;display:grid;grid-template-columns:38px minmax(0,1fr);gap:11px}
+.notif .appi{width:38px;height:38px;border-radius:9px;font-size:19px}
+.di-compact{position:absolute;left:50%;top:11px;width:136px;height:30px;margin-left:-68px;background:var(--black);border-radius:20px;z-index:7;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 8px}
+.di-compact .dot{width:18px;height:18px;border-radius:5px;background:var(--volt);color:var(--volt-ink);font-family:var(--num);font-weight:900;font-size:11px;display:grid;place-items:center}
+.di-compact .tm{font-family:var(--num);font-weight:800;font-size:17px;color:var(--volt);font-variant-numeric:tabular-nums}
+.di-exp{width:300px;background:var(--black);border-radius:40px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 0 0 1.5px var(--bezel)}
+.vidph{background:#1c1c20;border-radius:12px}
+.toast-mini{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mute)}
+.spin{width:16px;height:16px;border-radius:8px;border:2px solid var(--dim);border-top-color:var(--volt);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.homectl{display:flex;gap:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-unlock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 7.7-1.6"/></symbol>
+    <symbol id="i-cam" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></symbol>
+    <symbol id="i-camoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/><path d="M3 3l18 18"/></symbol>
+    <symbol id="i-spk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5l1.6 1.2-2 3.4-1.9-.7a7.6 7.6 0 0 1-1.7 1l-.3 2h-4l-.3-2a7.6 7.6 0 0 1-1.7-1l-1.9.7-2-3.4 1.6-1.2a7.7 7.7 0 0 1 0-2L3 10.3l2-3.4 1.9.7a7.6 7.6 0 0 1 1.7-1l.3-2h4l.3 2a7.6 7.6 0 0 1 1.7 1l1.9-.7 2 3.4-1.6 1.2a7.7 7.7 0 0 1 0 2z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 2L4.5 13.5h6.2L9.5 22l9-11.5h-6.2z"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2.5"/><path d="M9.5 2.5v3M14.5 2.5v3M9.5 18.5v3M14.5 18.5v3M2.5 9.5h3M2.5 14.5h3M18.5 9.5h3M18.5 14.5h3"/></symbol>
+    <symbol id="i-norec" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/><path d="M5.5 18.5l13-13"/></symbol>
+    <symbol id="i-timer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 2.5h5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 5h4v14h-4zM13.5 5h4v14h-4z"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M6 13l6 6 6-6"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></symbol>
+    <symbol id="i-move" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></symbol>
+    <symbol id="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="7" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/></symbol>
+    <symbol id="i-sc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M9 3.5l-5.5 5.5 5.5 5.5 5.5-5.5zM15 9.5l-5.5 5.5 5.5 5.5 5.5-5.5z"/></symbol>
+    <symbol id="i-vid" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 72 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h66M61 1.5l6 5.5-6 5.5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v4.5h4.5"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+<!-- ===== Masthead ===== -->
+<header class="mast">
+  <div>
+    <div class="legend"><span class="tag sprint">SPRINT</span> build now <span class="tag later">LATER</span> next up</div>
+    <h1 style="margin-top:18px">Doom&shy;scroller <em>Blocker</em></h1>
+    <p class="tag-line">Earn your scroll.</p>
+    <p class="lede">Open YouTube and this app jumps in first. Do 10 push-ups in front of the camera and YouTube is yours for 15 minutes. Every screen in the flow below, from first launch to the Lock Screen timer. The Challenge screen is live: hit play to watch it count.</p>
+  </div>
+  <ul class="rules">
+    <li><svg><use href="#i-sc"/></svg><div><b>Shortcuts does the blocking</b>An automation brings this app forward when YouTube opens. There's no app picker inside the app.</div></li>
+    <li><svg><use href="#i-lock"/></svg><div><b>Locked means locked, not closed</b>The app never closes YouTube or traps you. Leave anytime; YouTube just stays locked.</div></li>
+    <li><svg><use href="#i-move"/></svg><div><b>Readable from 3 ft away</b>During a set the phone sits on the floor. Giant numbers, high contrast, almost no words.</div></li>
+  </ul>
+</header>
+
+<!-- ===== Onboarding ===== -->
+<section>
+  <div class="sec-h"><h2>Onboarding</h2><p>First launch. Explain the deal, get camera permission, then walk through the Shortcuts automation and prove it works.</p></div>
+  <div class="rail"><div class="lane">
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding-bottom:24px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="col grow g8" style="justify-content:center">
+          <div class="row" style="gap:10px;align-items:flex-end">
+            <span class="big" style="font-size:150px;color:var(--volt)">10</span>
+            <div class="col g4" style="padding-bottom:12px">
+              <span style="font-family:var(--num);font-weight:800;font-size:24px;line-height:1;text-transform:uppercase">push-ups</span>
+              <span style="font-family:var(--num);font-weight:700;font-size:20px;color:var(--mute);line-height:1">=</span>
+              <span style="font-family:var(--num);font-weight:800;font-size:24px;line-height:1;text-transform:uppercase">15 min</span>
+            </div>
+          </div>
+          <h3 class="h-xl" style="margin-top:18px">Earn your scroll.</h3>
+          <p class="txt">Open YouTube and we jump in first. Knock out 10 push-ups and it's yours for 15 minutes.</p>
+          <p class="small" style="margin-top:6px">Bail anytime. YouTube just stays locked.</p>
+        </div>
+        <div class="col g16">
+          <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
+          <div class="btn pri">Let's go</div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>1a</span>Welcome</b></div><p>The whole deal in one line. Sets the tone: a trade, not a lecture.</p></figcaption>
+    </figure>
+
+    <div class="link"><svg><use href="#i-arrow"/></svg>Let's go</div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding-bottom:24px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="col grow g16" style="justify-content:center">
+          <div style="width:72px;height:72px;border-radius:22px;background:var(--volt-soft);display:grid;place-items:center;color:var(--volt)"><svg width="38" height="38"><use href="#i-cam"/></svg></div>
+          <h3 class="h-l">Your camera counts the reps</h3>
+          <div class="col g12">
+            <div class="row" style="align-items:flex-start"><svg class="ico" style="color:var(--volt)"><use href="#i-chip"/></svg><div><b style="font-size:15px">Processed on this iPhone</b><p class="small">Body tracking runs on-device.</p></div></div>
+            <div class="row" style="align-items:flex-start"><svg class="ico" style="color:var(--volt)"><use href="#i-norec"/></svg><div><b style="font-size:15px">Never recorded or stored</b><p class="small">No video is saved or uploaded. Ever.</p></div></div>
+            <div class="row" style="align-items:flex-start"><svg class="ico" style="color:var(--volt)"><use href="#i-timer"/></svg><div><b style="font-size:15px">Only on during a set</b><p class="small">Camera turns off when you finish or give up.</p></div></div>
+          </div>
+        </div>
+        <div class="col g4">
+          <div class="dots" style="margin-bottom:12px"><i></i><i class="on"></i><i></i><i></i></div>
+          <div class="btn pri">Allow camera</div>
+          <div class="btn ghost">Not now</div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>1b</span>Camera primer</b></div><p>Primes the iOS permission alert that follows. "Not now" is allowed; the denied state catches it later.</p></figcaption>
+    </figure>
+
+    <div class="link"><svg><use href="#i-arrow"/></svg>Allow camera<br>→ iOS alert</div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding-bottom:24px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="col g12 grow">
+          <span class="eyebrow">Step 3 of 4 · about a minute</span>
+          <h3 class="h-l">Set up the YouTube trigger</h3>
+          <ol class="steps">
+            <li><div>In Shortcuts, tap <em>Automation</em>, then <em>+</em> › <em>App</em></div></li>
+            <li><div>Choose <em>YouTube</em>, tick <em>Is Opened</em>, select <em>Run Immediately</em></div></li>
+            <li><div>Tap <em>New Blank Automation</em>, add <em>Open App</em> › <em>Doomscroller Blocker</em></div></li>
+            <li><div>Tap <em>Done</em> and come back here</div></li>
+          </ol>
+          <div class="card" style="padding:11px 12px;margin-top:2px">
+            <div class="row" style="gap:9px;font-size:12.5px">
+              <div class="appi vid" style="width:28px;height:28px;border-radius:7px"><svg style="width:13px;height:13px"><use href="#i-vid"/></svg></div>
+              <span style="color:var(--mute)">When YouTube opens</span>
+              <svg style="width:14px;height:14px;color:var(--dim)"><use href="#i-chev"/></svg>
+              <div class="appi ours" style="width:28px;height:28px;border-radius:7px;font-size:15px">10</div>
+            </div>
+          </div>
+        </div>
+        <div class="col g4">
+          <div class="dots" style="margin-bottom:12px"><i></i><i></i><i class="on"></i><i></i></div>
+          <div class="btn pri">Open Shortcuts <svg><use href="#i-out"/></svg></div>
+          <div class="btn ghost">I've already set it up</div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>1c</span>Shortcuts guide</b></div><p>A hand-off, not a picker. Steps use Shortcuts' exact labels so they match what's on screen there.</p></figcaption>
+    </figure>
+
+    <div class="link"><svg><use href="#i-arrow"/></svg>Back from Shortcuts</div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding-bottom:24px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="col g16 grow">
+          <span class="eyebrow">Step 4 of 4</span>
+          <h3 class="h-l">Test it</h3>
+          <div class="card row" style="justify-content:center;gap:16px;padding:22px 14px">
+            <div class="col center g4"><div class="appi vid" style="width:56px;height:56px;border-radius:14px"><svg style="width:24px;height:24px"><use href="#i-vid"/></svg></div><span class="small">YouTube</span></div>
+            <svg style="width:56px;height:14px;color:var(--volt)"><use href="#i-arrow"/></svg>
+            <div class="col center g4"><div class="appi ours" style="width:56px;height:56px;border-radius:14px;font-size:30px">10</div><span class="small">Us</span></div>
+          </div>
+          <p class="txt">Open YouTube from your Home Screen. We should pop up within a second.</p>
+          <ol class="steps">
+            <li class="done"><div>Camera allowed</div></li>
+            <li class="done"><div>Automation created</div></li>
+            <li><div>Test passed <small class="toast-mini" style="margin-top:4px"><i class="spin"></i>Waiting for YouTube…</small></div></li>
+          </ol>
+        </div>
+        <div class="col g4">
+          <div class="dots" style="margin-bottom:12px"><i></i><i></i><i></i><i class="on"></i></div>
+          <div class="btn pri">Open YouTube <svg><use href="#i-out"/></svg></div>
+          <div class="btn ghost">Didn't pop up? Fix it</div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>1d</span>Test it</b></div><p>Proves the automation works. When we come back to the front, the Intercept shows with a one-time "You're set" banner.</p></figcaption>
+    </figure>
+
+    <div class="link hot"><svg><use href="#i-arrow"/></svg>Test lands on Intercept</div>
+
+  </div></div>
+</section>
+
+<!-- ===== Core loop ===== -->
+<section>
+  <div class="sec-h"><h2>The loop</h2><p>Every time YouTube opens. Start to unlock is about 40 seconds of work.</p></div>
+  <div class="rail"><div class="lane hero-row">
+
+    <div class="node">
+      <div class="mini"><div class="appi vid" style="width:30px;height:30px;border-radius:8px"><svg style="width:14px;height:14px"><use href="#i-vid"/></svg></div><svg style="width:16px;height:16px;color:var(--dim)"><use href="#i-chev"/></svg><div class="appi sc" style="width:30px;height:30px;border-radius:8px"><svg style="width:16px;height:16px"><use href="#i-sc"/></svg></div></div>
+      <strong>You open YouTube</strong>
+      Shortcuts runs the automation and brings us to the front.
+    </div>
+    <div class="link"><svg><use href="#i-arrow"/></svg></div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding-bottom:22px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="row" style="justify-content:space-between">
+          <span class="pill lock"><svg><use href="#i-lock"/></svg>YouTube is locked</span>
+        </div>
+        <div class="col grow" style="justify-content:center">
+          <span class="big" style="font-size:230px;color:var(--volt);margin-left:-6px">10</span>
+          <span style="font-family:var(--num);font-weight:900;font-size:52px;line-height:.9;text-transform:uppercase">push-ups</span>
+          <span style="font-size:20px;font-weight:650;margin-top:8px">to open YouTube</span>
+          <p class="small" style="margin-top:10px;font-size:14px">Unlocks for 15 min. Your feed can wait 40 seconds.</p>
+        </div>
+        <div class="col g4">
+          <div class="btn pri" style="height:58px;font-size:19px">Start</div>
+          <div class="btn ghost">Give up</div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>2</span>Intercept</b></div><p>Readable at arm's length before you put the phone down. Give up is a real choice, styled quieter.</p></figcaption>
+    </figure>
+
+    <div class="link hot"><svg><use href="#i-arrow"/></svg>Start</div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding:54px 14px 22px;gap:10px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="row" style="justify-content:space-between;padding:0 4px">
+          <h3 class="h-l" style="font-size:22px">Prop it up</h3>
+          <span class="small">Step back</span>
+        </div>
+        <div class="card" style="padding:10px 10px 6px">
+          <svg viewBox="0 0 250 100" width="100%" style="display:block">
+            <line x1="4" y1="84" x2="246" y2="84" stroke="#55555D" stroke-width="2"/>
+            <!-- person in plank, head toward phone -->
+            <circle cx="150" cy="54" r="8" fill="#F5F5F2"/>
+            <path d="M140 60 L28 80" stroke="#F5F5F2" stroke-width="7" stroke-linecap="round"/>
+            <path d="M139 61 L141 83" stroke="#F5F5F2" stroke-width="5" stroke-linecap="round"/>
+            <!-- phone upright -->
+            <rect x="220" y="46" width="13" height="36" rx="3" fill="#FFD43B"/>
+            <path d="M232 70 L242 83" stroke="#FFD43B" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="226.5" cy="51" r="1.8" fill="#191300"/>
+            <!-- dimension -->
+            <path d="M158 94 L218 94 M158 90 v8 M218 90 v8" stroke="#FFD43B" stroke-width="1.5"/>
+            <text x="188" y="78" fill="#FFD43B" font-family="Barlow Condensed,system-ui" font-weight="800" font-size="15" text-anchor="middle">~3 FT</text>
+            <text x="6" y="16" fill="#8E8E96" font-family="-apple-system,system-ui" font-size="10.5">Head toward the phone</text>
+            <text x="244" y="16" fill="#8E8E96" font-family="-apple-system,system-ui" font-size="10.5" text-anchor="end">Upright, screen facing you</text>
+          </svg>
+        </div>
+        <div class="preview cam">
+          <svg class="skel" data-t="0.05" data-vb="0 200 282 300"></svg>
+          <div class="frame-ok"></div>
+        </div>
+        <div class="inframe"><svg><use href="#i-check"/></svg>You're in frame</div>
+        <div class="row" style="justify-content:space-between;padding:0 4px">
+          <span style="font-size:15px;font-weight:650;line-height:1.2">Hold plank.<br><span style="color:var(--mute);font-weight:500">Starting in</span></span>
+          <span class="big" style="font-size:72px;color:var(--volt)">3</span>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>3</span>Phone placement</b></div><p>Diagram on top, live preview below. Once you're in frame, a 3-2-1 countdown starts on its own so you never touch the phone from the floor.</p></figcaption>
+    </figure>
+
+    <div class="link hot"><svg><use href="#i-arrow"/></svg>3, 2, 1, go</div>
+
+    <!-- HERO: Challenge -->
+    <figure class="shot hero" style="margin:0">
+      <div class="phone"><div class="scr cam" id="hero" style="padding:52px 16px 30px">
+        <div class="sb"></div><i class="island"></i>
+        <svg class="skel" id="heroSkel"></svg>
+        <div class="scrim-top"></div><div class="scrim-bot"></div>
+        <div class="over col g8">
+          <div class="segs" id="segs"></div>
+          <div class="row" style="justify-content:flex-end;margin-top:2px"><span class="voice" id="voice"><svg><use href="#i-spk"/></svg>Counting aloud · <span class="w" id="word">“Seven”</span></span></div>
+          <div class="counter" id="counter" style="margin-top:-14px"><span class="big n" id="count">7</span><span class="of">/10</span></div>
+        </div>
+        <span class="glabel">DEPTH</span>
+        <div class="gauge"><div class="mark"></div><div class="f" id="gfill"></div></div>
+        <div class="cue off" id="cue"><svg><use href="#i-down"/></svg>Go lower</div>
+        <div class="giveup">Give up</div>
+        <div class="done-ov off" id="doneOv"><span style="font-family:var(--num);font-weight:800;font-size:28px;text-transform:uppercase">Scroll earned</span><span class="big">10</span><span style="font-weight:650">YouTube unlocked</span></div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap">
+        <div class="t"><span class="tag sprint">SPRINT</span><b><span>4</span>Challenge</b></div>
+        <div class="ctrls" style="margin:4px 0 2px">
+          <button id="bPlay" type="button" aria-pressed="false"><svg><use href="#i-pause"/></svg><span>Pause</span></button>
+          <button id="bHalf" type="button"><svg><use href="#i-down"/></svg>Do a half rep</button>
+          <button id="bSound" type="button" aria-pressed="false"><svg><use href="#i-spk"/></svg>Hear counts</button>
+        </div>
+        <p>The count is the screen: 200pt numerals in the accent, readable from the floor. Ten segments fill as you go. A rep counts when your chest crosses the depth line (about 90° at the elbow); a shallow one flashes <b style="color:var(--warn);font-size:13px">Go lower</b> and the count holds. Counts are spoken aloud so you can keep your eyes down. Give up sits at the bottom in 13pt grey, there if you need it and easy to ignore.</p>
+      </figcaption>
+    </figure>
+
+    <div class="link hot"><svg><use href="#i-arrow"/></svg>10 / 10</div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="background:var(--volt);color:var(--volt-ink);padding-bottom:22px">
+        <div class="sb dark"></div><i class="island"></i>
+        <div class="col grow" style="justify-content:center">
+          <span style="font-family:var(--num);font-weight:900;font-style:italic;font-size:34px;text-transform:uppercase;line-height:1">Scroll earned.</span>
+          <span class="big" style="font-size:118px;margin:14px 0 6px;margin-left:-4px">15:00</span>
+          <span style="font-size:21px;font-weight:750;line-height:1.2">YouTube unlocked<br>for 15 minutes</span>
+          <div class="row" style="gap:6px;margin-top:22px;font-size:13px;font-weight:600;opacity:.75">
+            <svg style="width:16px;height:16px"><use href="#i-check"/></svg>10 push-ups · 38 sec
+          </div>
+        </div>
+        <div class="col g8">
+          <div class="btn blk">Open YouTube <svg><use href="#i-out"/></svg></div>
+          <p style="text-align:center;font-size:13px;margin:0;font-weight:600;opacity:.7">Opening automatically in 3…</p>
+        </div>
+        <div class="hi dark"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>5</span>Success</b></div><p>Full-bleed accent so the win registers from across the room. Hands off to YouTube after 3 seconds; while unlocked, the automation bounces straight back to YouTube.</p></figcaption>
+    </figure>
+
+    <div class="link"><svg><use href="#i-arrow"/></svg>Auto, 3 s</div>
+    <div class="node" style="border-color:var(--volt);color:var(--fg)">
+      <div class="mini"><div class="appi vid" style="width:30px;height:30px;border-radius:8px"><svg style="width:14px;height:14px"><use href="#i-vid"/></svg></div><span class="pill open" style="height:24px;font-size:12px"><svg><use href="#i-unlock"/></svg>15:00</span></div>
+      <strong>YouTube opens</strong>
+      <span style="color:var(--mute)">Timer runs in the Live Activity. Nothing interrupts the session.</span>
+    </div>
+
+  </div>
+
+  <!-- Branch lane -->
+  <div class="lane" style="margin-top:48px">
+    <div class="node" style="margin-top:220px">
+      <strong>Give up</strong>
+      From the Intercept, Placement or Challenge screen.
+    </div>
+    <div class="link"><svg><use href="#i-arrow"/></svg></div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding-bottom:22px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="col grow g12" style="justify-content:center">
+          <div style="width:84px;height:84px;border-radius:26px;background:var(--panel2);display:grid;place-items:center"><svg width="44" height="44"><use href="#i-lock"/></svg></div>
+          <h3 class="h-xl" style="margin-top:10px">YouTube stays locked</h3>
+          <p class="txt">No push-ups, no scroll. Fair trade. It'll be here when you're ready.</p>
+          <p class="small" style="margin-top:4px">Head anywhere else you like. YouTube unlocks after a full set.</p>
+        </div>
+        <div class="col g4">
+          <div class="btn pri"><svg><use href="#i-redo"/></svg>Try again</div>
+          <div class="btn ghost">Done</div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>6</span>Gave up</b></div><p>States the outcome plainly and leaves. No closing, no guilt. "Done" goes to Home; Try again returns to Placement.</p></figcaption>
+    </figure>
+
+    <div class="link hot"><svg><use href="#i-arrow"/></svg>Done</div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding-bottom:22px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="iosnav"><span></span><span class="iosbtn" aria-label="Settings"><svg><use href="#i-gear"/></svg></span></div>
+        <h3 class="h-xl" style="font-size:32px;margin:2px 0 14px">Doomscroller</h3>
+        <div class="card col g12" id="homeCard" style="padding:16px">
+          <div class="row" style="justify-content:space-between">
+            <div class="row" style="gap:10px"><div class="appi vid"><svg><use href="#i-vid"/></svg></div><b style="font-size:17px">YouTube</b></div>
+            <span class="pill lock" id="homePill"><svg><use href="#i-lock"/></svg>Locked</span>
+          </div>
+          <div id="homeLocked" class="col g4">
+            <span class="big" style="font-size:96px;color:var(--fg);margin-top:6px">10</span>
+            <span style="font-size:16px;font-weight:650">push-ups to unlock</span>
+            <p class="small">Next time you open YouTube.</p>
+          </div>
+          <div id="homeOpen" class="col g4" hidden>
+            <span class="big" id="homeTimer" style="font-size:96px;color:var(--volt);margin-top:6px">11:42</span>
+            <span style="font-size:16px;font-weight:650">left to scroll</span>
+            <div class="prog" style="margin:8px 0 4px"><i id="homeProg" style="width:78%"></i></div>
+            <p class="small">When it hits zero, YouTube locks the next time you open it.</p>
+          </div>
+        </div>
+        <div class="grow"></div>
+        <div class="group">
+          <div class="it"><svg class="ico" style="color:var(--volt)"><use href="#i-sc"/></svg>Last intercept<span class="r">2:14 PM</span></div>
+          <div class="it"><svg class="ico" style="color:var(--mute)"><use href="#i-gear"/></svg>Settings<span class="r"><svg><use href="#i-chev"/></svg></span></div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap">
+        <div class="t"><span class="tag sprint">SPRINT</span><b><span>7</span>Home</b></div>
+        <div class="ctrls homectl" role="group" aria-label="Home state">
+          <button type="button" id="hLocked" aria-pressed="true"><svg><use href="#i-lock"/></svg>Locked</button>
+          <button type="button" id="hOpen" aria-pressed="false"><svg><use href="#i-unlock"/></svg>Unlocked</button>
+        </div>
+        <p>What you see when you open the app yourself. One status card, gear in the top-right for Settings. "Last intercept" tells you the automation is firing.</p>
+      </figcaption>
+    </figure>
+  </div>
+  </div>
+</section>
+
+<!-- ===== States ===== -->
+<section>
+  <div class="sec-h"><h2>States</h2><p>What Placement and Challenge do when something's off. Each fix is one glance from the floor.</p></div>
+  <div class="rail"><div class="lane">
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding-bottom:22px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="col grow g12" style="justify-content:center">
+          <div style="width:84px;height:84px;border-radius:26px;background:var(--panel2);display:grid;place-items:center;color:var(--bad)"><svg width="44" height="44"><use href="#i-camoff"/></svg></div>
+          <h3 class="h-xl" style="margin-top:10px">Camera is off</h3>
+          <p class="txt">We need it to count your reps. Video stays on this iPhone and is never saved.</p>
+          <div class="card" style="padding:10px 12px;font-size:13px;color:var(--mute)">Settings › Doomscroller Blocker › <b style="color:var(--fg)">Camera</b></div>
+        </div>
+        <div class="col g4">
+          <div class="btn pri">Open Settings <svg><use href="#i-out"/></svg></div>
+          <div class="btn ghost">Give up</div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>S1</span>Camera denied</b></div><p>Replaces Placement when access is off. Deep-links to the app's iOS Settings page. YouTube stays locked meanwhile.</p></figcaption>
+    </figure>
+
+    <figure class="shot" style="margin:0 0 0 24px">
+      <div class="phone"><div class="scr cam" style="padding:52px 16px 48px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="ghost-sil" style="top:140px;height:200px"></div>
+        <div class="scrim-top" style="height:240px"></div>
+        <div class="over col g8">
+          <div class="segs"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="row" style="justify-content:space-between;align-items:center;margin-top:6px">
+            <div class="counter" style="margin:0"><span class="big n" style="font-size:110px;color:var(--fg);opacity:.5">4</span><span class="of" style="font-size:36px;opacity:.5;padding-bottom:6px">/10</span></div>
+            <span class="pill lock" style="background:rgba(0,0,0,.6)"><svg><use href="#i-pause"/></svg>Paused</span>
+          </div>
+        </div>
+        <div class="over col g12" style="margin-top:auto">
+          <span style="font-family:var(--num);font-weight:900;font-size:56px;line-height:.9;text-transform:uppercase;color:var(--fg)">Can't<br>see you</span>
+          <div class="col g8" style="font-size:16px;font-weight:600">
+            <div class="row" style="gap:10px"><svg class="ico" style="color:var(--volt)"><use href="#i-person"/></svg>Head and shoulders in frame</div>
+            <div class="row" style="gap:10px"><svg class="ico" style="color:var(--volt)"><use href="#i-move"/></svg>Phone about 3 ft away</div>
+          </div>
+        </div>
+        <div class="giveup" style="bottom:12px">Give up</div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>S2</span>Body not detected</b></div><p>Pauses mid-set and keeps your count. The dashed outline shows where to be. Resumes on its own once you're back in frame.</p></figcaption>
+    </figure>
+
+    <figure class="shot" style="margin:0 0 0 24px">
+      <div class="phone"><div class="scr cam dark" style="padding:52px 16px 30px">
+        <div class="sb"></div><i class="island"></i>
+        <svg class="skel" data-t="0.1" data-mode="faint"></svg>
+        <div class="over col g12 grow" style="justify-content:center;align-items:center;text-align:center">
+          <div style="width:96px;height:96px;border-radius:48px;background:var(--volt);color:var(--volt-ink);display:grid;place-items:center"><svg width="54" height="54"><use href="#i-sun"/></svg></div>
+          <span style="font-family:var(--num);font-weight:900;font-size:60px;line-height:.9;text-transform:uppercase">Too dark</span>
+          <span style="font-size:19px;font-weight:650">Turn on a light<br>or face a window</span>
+        </div>
+        <div class="giveup" style="bottom:12px">Give up</div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>S3</span>Poor lighting</b></div><p>Shown when tracking confidence drops from low light rather than from you leaving the frame. One fix, one icon, huge type.</p></figcaption>
+    </figure>
+
+    <figure class="shot" style="margin:0 0 0 24px">
+      <div class="phone"><div class="scr cam" style="padding:52px 16px 30px">
+        <div class="sb"></div><i class="island"></i>
+        <svg class="skel" data-t="0.5" data-mode="warn"></svg>
+        <div class="scrim-top"></div><div class="scrim-bot"></div>
+        <div class="over col g8">
+          <div class="segs"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+          <div class="row" style="justify-content:flex-end;margin-top:2px"><span class="pill" style="background:rgba(255,159,10,.2);color:var(--warn)">Didn't count</span></div>
+          <div class="counter" style="margin-top:-14px"><span class="big n">6</span><span class="of">/10</span></div>
+        </div>
+        <span class="glabel">DEPTH</span>
+        <div class="gauge"><div class="mark"></div><div class="f" style="height:50%;background:var(--warn)"></div></div>
+        <div class="cue"><svg><use href="#i-down"/></svg>Go lower</div>
+        <div class="giveup">Give up</div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag sprint">SPRINT</span><b><span>S4</span>Partial rep</b></div><p>Count holds at 6. The depth bar stops short of the line, the cue flashes for about 1.5 s and the voice says "Lower." No penalty, just do it again.</p></figcaption>
+    </figure>
+
+  </div></div>
+</section>
+
+<!-- ===== LATER ===== -->
+<section>
+  <div class="sec-h"><h2>Later</h2><p>Stats, settings, more apps, and the timer outside the app.</p></div>
+  <div class="rail"><div class="lane">
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding-bottom:22px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="iosnav"><span></span><span class="iosbtn"><svg><use href="#i-gear"/></svg></span></div>
+        <h3 class="h-xl" style="font-size:32px;margin:2px 0 12px">Doomscroller</h3>
+        <div class="card row" style="justify-content:space-between;padding:12px 14px">
+          <div class="row" style="gap:10px"><div class="appi vid" style="width:34px;height:34px"><svg><use href="#i-vid"/></svg></div><b>YouTube</b></div>
+          <span class="pill open"><svg><use href="#i-unlock"/></svg>11:42 left</span>
+        </div>
+        <span class="eyebrow" style="margin:18px 0 8px">Today</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="stat y"><span class="big">40</span><span class="l">push-ups</span></div>
+          <div class="stat"><span class="big">4</span><span class="l">unlocks</span></div>
+          <div class="stat"><span class="big">1</span><span class="l">give-up</span></div>
+          <div class="stat"><span class="big" style="display:flex;align-items:center;gap:4px">6<svg style="width:22px;height:22px;color:var(--volt)"><use href="#i-bolt"/></svg></span><span class="l">day streak</span></div>
+        </div>
+        <div class="card col g8" style="margin-top:8px;padding:12px 13px">
+          <div class="row" style="justify-content:space-between"><span class="small" style="color:var(--fg);font-weight:600">This week</span><span class="small">210 push-ups</span></div>
+          <div class="bars"><i class="on" style="height:60%"></i><i class="on" style="height:80%"></i><i class="on" style="height:40%"></i><i class="on" style="height:100%"></i><i class="on" style="height:50%"></i><i class="on" style="height:75%"></i><i style="height:12%"></i></div>
+          <div class="blabels"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag later">LATER</span><b><span>8</span>Home with stats</b></div><p>Same status card, compressed. Give-ups are just a number, no red, no shame. Streak counts days with at least one full set.</p></figcaption>
+    </figure>
+
+    <div class="link"><svg><use href="#i-arrow"/></svg>Gear</div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding:54px 14px 22px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="iosnav" style="height:34px"><span style="color:var(--volt);font-size:16px;display:flex;align-items:center;gap:2px"><svg style="width:16px;height:16px;transform:scaleX(-1)"><use href="#i-chev"/></svg>Home</span><b style="font-size:16px">Settings</b><span style="width:50px"></span></div>
+        <div class="col g16" style="margin-top:10px">
+          <div>
+            <div class="glabel2">Blocked apps</div>
+            <div class="group">
+              <div class="it"><div class="appi vid" style="width:28px;height:28px;border-radius:7px"><svg style="width:13px;height:13px"><use href="#i-vid"/></svg></div>YouTube<span class="r">Automation on<svg><use href="#i-chev"/></svg></span></div>
+              <div class="it" style="color:var(--volt)"><svg class="ico"><use href="#i-plus"/></svg>Add app</div>
+            </div>
+          </div>
+          <div>
+            <div class="glabel2">Challenge</div>
+            <div class="group">
+              <div class="it" style="padding-block:9px"><div class="seg" style="flex:1"><span class="on">Push-ups</span><span>Squats</span></div></div>
+              <div class="it">Reps<span class="r" style="color:var(--fg);gap:10px"><b style="font-variant-numeric:tabular-nums">10</b><span class="stepper"><span>−</span><span>+</span></span></span></div>
+              <div class="it">Speak counts<span class="r"><span class="tgl"></span></span></div>
+            </div>
+          </div>
+          <div>
+            <div class="glabel2">Unlock for</div>
+            <div class="group">
+              <div class="it" style="padding-block:9px"><div class="seg" style="flex:1"><span>5 min</span><span>10</span><span class="on">15</span><span>30</span></div></div>
+            </div>
+            <div class="gfoot">Fixed timer. When it ends, the app relocks on its next launch.</div>
+          </div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag later">LATER</span><b><span>9</span>Settings</b></div><p>Standard grouped list. Exercise is a segmented control, reps a stepper (5–30), unlock time a fixed choice of 5, 10, 15 or 30 min.</p></figcaption>
+    </figure>
+
+    <div class="link"><svg><use href="#i-arrow"/></svg>Add app</div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr" style="padding:54px 14px 22px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="under col g12">
+          <b style="font-size:16px;text-align:center">Settings</b>
+          <div class="group"><div class="it">YouTube</div><div class="it">Add app</div></div>
+          <div class="group"><div class="it">Push-ups</div><div class="it">Reps</div><div class="it">Speak counts</div></div>
+        </div>
+        <div class="dimmer"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="row" style="justify-content:space-between"><span style="color:var(--volt);font-size:16px">Cancel</span><span></span></div>
+          <h3 class="h-l" style="font-size:23px">Block another app</h3>
+          <p class="small" style="font-size:13.5px">You pick the app inside Shortcuts. Same steps as YouTube.</p>
+          <ol class="steps">
+            <li><div>Tap <em>Automation</em>, then <em>+</em> › <em>App</em></div></li>
+            <li><div>Choose the app, tick <em>Is Opened</em>, select <em>Run Immediately</em></div></li>
+            <li><div>Add <em>Open App</em> › <em>Doomscroller Blocker</em>, tap <em>Done</em></div></li>
+            <li><div><em>Test it:</em> open that app. We'll add it to your list when we see it.</div></li>
+          </ol>
+          <div class="grow"></div>
+          <div class="btn pri">Open Shortcuts <svg><use href="#i-out"/></svg></div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag later">LATER</span><b><span>10</span>Add app</b></div><p>A sheet over Settings. The app learns which app was added the first time the new automation brings it forward, so no picker is needed.</p></figcaption>
+    </figure>
+
+    <div class="link"><svg><use href="#i-arrow"/></svg>Lock phone<br>mid-session</div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr lockscr" style="padding:60px 12px 22px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="lk-date">Monday, October 5</div>
+        <div class="lk-time">9:41</div>
+        <div class="grow"></div>
+        <div class="la">
+          <div class="row" style="justify-content:space-between">
+            <div class="row" style="gap:9px"><div class="appi ours" style="width:30px;height:30px;border-radius:8px;font-size:16px">10</div><b style="font-size:14px">YouTube unlocked</b></div>
+            <span class="big" style="font-size:40px;color:var(--volt)">11:42</span>
+          </div>
+          <span style="font-size:12px;color:var(--mute);margin-top:-4px">Locks on next open after 9:53</span>
+          <div class="prog"><i style="width:78%"></i></div>
+        </div>
+        <div class="row" style="justify-content:space-between;padding:22px 30px 6px">
+          <span style="width:44px;height:44px;border-radius:22px;background:rgba(255,255,255,.14)"></span>
+          <span style="width:44px;height:44px;border-radius:22px;background:rgba(255,255,255,.14)"></span>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag later">LATER</span><b><span>11a</span>Live Activity · Lock Screen</b></div><p>Countdown and progress, nothing to tap. Ends itself at zero.</p></figcaption>
+    </figure>
+
+    <figure class="shot" style="margin:0 0 0 24px">
+      <div class="phone"><div class="scr" style="padding:56px 0 22px">
+        <div class="sb"></div>
+        <div class="di-compact"><span class="dot">10</span><span class="tm">11:42</span></div>
+        <div class="vidph" style="height:158px;border-radius:0;display:grid;place-items:center"><svg style="width:40px;height:40px;color:#55555D"><use href="#i-vid"/></svg></div>
+        <div class="col g8" style="padding:14px 16px">
+          <span class="vidph" style="height:14px;width:90%"></span>
+          <span class="vidph" style="height:14px;width:60%"></span>
+          <span class="vidph" style="height:11px;width:40%;margin-top:4px"></span>
+        </div>
+        <div class="col g12" style="padding:6px 16px">
+          <div class="row"><span class="vidph" style="width:120px;height:68px;flex:none"></span><div class="col g8 grow"><span class="vidph" style="height:11px"></span><span class="vidph" style="height:11px;width:70%"></span></div></div>
+          <div class="row"><span class="vidph" style="width:120px;height:68px;flex:none"></span><div class="col g8 grow"><span class="vidph" style="height:11px"></span><span class="vidph" style="height:11px;width:55%"></span></div></div>
+          <div class="row"><span class="vidph" style="width:120px;height:68px;flex:none"></span><div class="col g8 grow"><span class="vidph" style="height:11px"></span><span class="vidph" style="height:11px;width:80%"></span></div></div>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag later">LATER</span><b><span>11b</span>Dynamic Island</b></div><p>Compact view while you watch (placeholder app content). Long-press expands it:</p>
+        <div class="di-exp" style="margin-top:8px;width:100%;max-width:292px">
+          <div class="row" style="justify-content:space-between">
+            <div class="row" style="gap:8px"><div class="appi ours" style="width:26px;height:26px;border-radius:7px;font-size:14px">10</div><b style="font-size:13px">YouTube unlocked</b></div>
+            <span class="big" style="font-size:34px;color:var(--volt)">11:42</span>
+          </div>
+          <div class="prog"><i style="width:78%"></i></div>
+        </div>
+      </figcaption>
+    </figure>
+
+    <div class="link"><svg><use href="#i-arrow"/></svg>Timer hits 0:00</div>
+
+    <figure class="shot" style="margin:0">
+      <div class="phone"><div class="scr lockscr" style="padding:60px 12px 22px">
+        <div class="sb"></div><i class="island"></i>
+        <div class="lk-date">Monday, October 5</div>
+        <div class="lk-time">9:53</div>
+        <div class="grow"></div>
+        <div class="notif">
+          <div class="appi ours">10</div>
+          <div class="col" style="min-width:0">
+            <div class="row" style="justify-content:space-between"><b style="font-size:14px">Time's up</b><span style="font-size:12px;color:var(--mute)">now</span></div>
+            <span style="font-size:13.5px;line-height:1.35">Finish your video. YouTube locks the next time you open it.</span>
+          </div>
+        </div>
+        <div class="row" style="justify-content:space-between;padding:22px 30px 6px">
+          <span style="width:44px;height:44px;border-radius:22px;background:rgba(255,255,255,.14)"></span>
+          <span style="width:44px;height:44px;border-radius:22px;background:rgba(255,255,255,.14)"></span>
+        </div>
+        <div class="hi"></div>
+      </div></div>
+      <figcaption class="cap"><div class="t"><span class="tag later">LATER</span><b><span>11c</span>Time's up</b></div><p>A heads-up, not a kick-out. The current session carries on; the lock applies on YouTube's next launch, which shows the Intercept again.</p></figcaption>
+    </figure>
+
+  </div></div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  // status bars
+  const sbHTML = '<span>9:41</span><span class="ic"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 2.5c2.3 0 4.4.9 6 2.4l1.2-1.3A10.2 10.2 0 0 0 8 .7 10.2 10.2 0 0 0 .8 3.6L2 4.9a8.5 8.5 0 0 1 6-2.4zm0 3.6c1.3 0 2.5.5 3.4 1.3l1.2-1.3A6.6 6.6 0 0 0 8 4.3a6.6 6.6 0 0 0-4.6 1.8l1.2 1.3A5 5 0 0 1 8 6.1zM8 12l2.2-2.3a3 3 0 0 0-4.4 0z"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/><path d="M24 4v4c.8-.3 1.3-1.1 1.3-2S24.8 4.3 24 4z" fill="currentColor" opacity=".4"/></svg></span>';
+  document.querySelectorAll('.sb').forEach(el=>{ el.innerHTML = sbHTML; });
+  document.querySelectorAll('.lockscr .sb span:first-child').forEach(el=>{ el.textContent=''; });
+
+  // skeleton geometry in a 282x632 screen
+  const UP = {h:[141,300,24], sl:[90,342], sr:[192,342], el:[72,398], er:[210,398], wl:[80,456], wr:[202,456], hip:[141,250], fl:[130,206], fr:[152,206]};
+  const DN = {h:[141,374,26], sl:[84,404], sr:[198,404], el:[44,416], er:[238,416], wl:[80,456], wr:[202,456], hip:[141,262], fl:[130,206], fr:[152,206]};
+  const L = (a,b,t)=>a+(b-a)*t;
+  function pose(t){ const p={}; for(const k in UP){ p[k]=UP[k].map((v,i)=>L(v,DN[k][i],t)); } return p; }
+  function skelSVG(t, mode){
+    const p = pose(t);
+    const c = mode==='warn' ? '#FF9F0A' : '#FFD43B';
+    const op = mode==='faint' ? .18 : 1;
+    const sc = [(p.sl[0]+p.sr[0])/2,(p.sl[1]+p.sr[1])/2];
+    const ln=(a,b,w,col,o)=>`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" opacity="${o}"/>`;
+    let body = '<g filter="url(#blr)" opacity="'+(mode==='faint'?.5:.9)+'">'
+      + ln(p.hip,p.fl,16,'#0e0b09',1)+ln(p.hip,p.fr,16,'#0e0b09',1)+ln(sc,p.hip,40,'#120e0b',1)
+      + ln(p.sl,p.sr,34,'#16110d',1)+ln(p.sl,p.el,22,'#16110d',1)+ln(p.el,p.wl,18,'#16110d',1)+ln(p.sr,p.er,22,'#16110d',1)+ln(p.er,p.wr,18,'#16110d',1)
+      + `<circle cx="${p.h[0]}" cy="${p.h[1]}" r="${p.h[2]+6}" fill="#1a140f"/></g>`;
+    let sk = `<g opacity="${op}">`
+      + ln(p.hip,p.fl,2.5,c,.45)+ln(p.hip,p.fr,2.5,c,.45)+ln(sc,p.hip,2.5,c,.45)
+      + ln(p.sl,p.sr,4.5,c,1)+ln(p.sl,p.el,4.5,c,1)+ln(p.el,p.wl,4.5,c,1)+ln(p.sr,p.er,4.5,c,1)+ln(p.er,p.wr,4.5,c,1)
+      + `<circle cx="${p.h[0]}" cy="${p.h[1]}" r="${p.h[2]}" fill="rgba(0,0,0,.25)" stroke="${c}" stroke-width="4"/>`
+      + [p.sl,p.sr,p.el,p.er,p.wl,p.wr].map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="5.5" fill="${c}" stroke="#000" stroke-width="2"/>`).join('')
+      + [p.hip,p.fl,p.fr].map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="3" fill="${c}" opacity=".5"/>`).join('')
+      + '</g>';
+    const floor = '<line x1="0" y1="462" x2="282" y2="462" stroke="rgba(255,255,255,.06)" stroke-width="1"/>';
+    return '<defs><filter id="blr" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>' + floor + body + sk;
+  }
+  document.querySelectorAll('svg.skel[data-t]').forEach(s=>{
+    s.setAttribute('viewBox', s.dataset.vb || '0 0 282 632');
+    s.setAttribute('preserveAspectRatio','xMidYMid slice');
+    s.innerHTML = skelSVG(parseFloat(s.dataset.t), s.dataset.mode||'ok');
+  });
+
+  // ===== Hero challenge simulation =====
+  const heroSkel = document.getElementById('heroSkel');
+  heroSkel.setAttribute('viewBox','0 0 282 632');
+  const segs = document.getElementById('segs');
+  segs.innerHTML = Array.from({length:10},()=>'<i></i>').join('');
+  const countEl = document.getElementById('count'), counter = document.getElementById('counter');
+  const wordEl = document.getElementById('word'), voice = document.getElementById('voice');
+  const cue = document.getElementById('cue'), gfill = document.getElementById('gfill'), doneOv = document.getElementById('doneOv');
+  const WORDS = ['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
+  let count = 7, playing = true, sound = false, forceHalf = false;
+  const pattern = [1,1,.5,1,1,1,1,.55,1,1,1];
+  let pi = 0, repStart = null, peak = 1, reached = false, restUntil = 0, cueTimer = null, doneUntil = 0;
+
+  function speak(w){ if(!sound) return; try{ const u = new SpeechSynthesisUtterance(w); u.rate=1.1; speechSynthesis.cancel(); speechSynthesis.speak(u);}catch(e){} }
+  function render(t){
+    heroSkel.innerHTML = skelSVG(t,'ok');
+    gfill.style.height = Math.round(t*100)+'%';
+    gfill.classList.toggle('hit', t>=0.8);
+  }
+  function setCount(n, bump){
+    count = n; countEl.textContent = n;
+    [...segs.children].forEach((s,i)=>s.classList.toggle('on', i<n));
+    if(bump){ counter.classList.remove('bump'); void counter.offsetWidth; counter.classList.add('bump'); }
+  }
+  function sayWord(w){ wordEl.textContent = '“'+w+'”'; voice.classList.remove('say'); void voice.offsetWidth; voice.classList.add('say'); speak(w); }
+  function showCue(){ cue.classList.remove('off'); clearTimeout(cueTimer); cueTimer = setTimeout(()=>cue.classList.add('off'),1500); sayWord('Lower'); }
+  setCount(7,false); render(0);
+
+  const DUR = 1500;
+  function frame(now){
+    if(playing){
+      if(now < doneUntil){ /* hold success */ }
+      else if(doneUntil && now >= doneUntil){ doneUntil = 0; doneOv.classList.add('off'); setCount(4,false); sayWord('Four'); restUntil = now + 600; }
+      else if(now < restUntil){ render(0); }
+      else {
+        if(repStart===null){ repStart = now; peak = forceHalf ? .5 : pattern[pi++ % pattern.length]; forceHalf = false; reached = false; }
+        const p = Math.min(1,(now-repStart)/DUR);
+        const t = peak * Math.pow(Math.sin(Math.PI*p), .85);
+        if(t>=0.8) reached = true;
+        render(t);
+        if(p>=1){
+          repStart = null; restUntil = now + 380;
+          if(reached){
+            setCount(count+1,true); sayWord(WORDS[count]);
+            if(count>=10){ doneOv.classList.remove('off'); doneUntil = now + 2600; }
+          } else showCue();
+        }
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const bPlay = document.getElementById('bPlay');
+  function setPlay(v){ playing = v; bPlay.innerHTML = v ? '<svg><use href="#i-pause"/></svg><span>Pause</span>' : '<svg><use href="#i-play"/></svg><span>Play</span>'; }
+  if(reduce) setPlay(false);
+  bPlay.addEventListener('click',()=>setPlay(!playing));
+  document.getElementById('bHalf').addEventListener('click',()=>{ forceHalf = true; if(!playing) setPlay(true); });
+  const bSound = document.getElementById('bSound');
+  bSound.addEventListener('click',()=>{ sound = !sound; bSound.setAttribute('aria-pressed', String(sound)); if(sound) speak(WORDS[count]); else { try{speechSynthesis.cancel()}catch(e){} } });
+  requestAnimationFrame(frame);
+
+  // ===== Home state toggle =====
+  const hL = document.getElementById('hLocked'), hO = document.getElementById('hOpen');
+  const pill = document.getElementById('homePill'), lk = document.getElementById('homeLocked'), op = document.getElementById('homeOpen');
+  const tEl = document.getElementById('homeTimer'), pr = document.getElementById('homeProg');
+  let secs = 702, tick = null;
+  function fmt(s){ return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  function setHome(open){
+    hL.setAttribute('aria-pressed', String(!open)); hO.setAttribute('aria-pressed', String(open));
+    lk.hidden = open; op.hidden = !open;
+    pill.className = 'pill ' + (open ? 'open' : 'lock');
+    pill.innerHTML = open ? '<svg><use href="#i-unlock"/></svg>Unlocked' : '<svg><use href="#i-lock"/></svg>Locked';
+    clearInterval(tick);
+    if(open){ tick = setInterval(()=>{ secs = secs>0 ? secs-1 : 900; tEl.textContent = fmt(secs); pr.style.width = (secs/900*100).toFixed(1)+'%'; },1000); }
+  }
+  hL.addEventListener('click',()=>setHome(false));
+  hO.addEventListener('click',()=>setHome(true));
+})();
+</script>
+
+</body></html>
