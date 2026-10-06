@@ -16,7 +16,12 @@ struct ContentView: View {
             }
             .navigationTitle("Doomscroller Blocker")
             .toolbar {
-                Button("Clear", action: log.clear)
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink("Camera") { CameraScreen() }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Clear", action: log.clear)
+                }
             }
         }
     }
