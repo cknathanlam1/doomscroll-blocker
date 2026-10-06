@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0B0B0D" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Push-up Test" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>Push-up Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,800;1,900&display=swap"
+    />
+    <!-- Loaded here (not imported from JS) so the page is still styled if a script fails. -->
+    <link rel="stylesheet" href="/src/styles.css" />
+    <script>
+      // Collects errors that happen before the app's own error log starts
+      // (for example a module that fails to load). There is no Safari Web
+      // Inspector on Windows, so if the app never starts we show them on screen.
+      window.__bootErrors = [];
+      window.addEventListener('error', function (e) {
+        if (window.__bootErrors) window.__bootErrors.push(String((e.error && e.error.stack) || e.message || e));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason;
+        if (window.__bootErrors) window.__bootErrors.push('Unhandled promise rejection: ' + String((r && (r.stack || r.message)) || r));
+      });
+      setTimeout(function () {
+        var d = document.documentElement.dataset;
+        if (d.booted || d.booting) return; // main.ts ran and reports its own problems
+        var box = document.getElementById('boot-fail');
+        var text = document.getElementById('boot-fail-text');
+        if (!box || !text) return;
+        text.textContent = (window.__bootErrors || []).join('\n\n') || 'The app script did not load. Is the dev server (npm run dev) still running?';
+        box.hidden = false;
+      }, 10000);
+    </script>
+  </head>
+  <body data-screen="start">
+    <!-- Icon sprite: <svg><use href="#i-name"/></svg> -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></symbol>
+        <symbol id="i-camoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" /><circle cx="12" cy="13.5" r="3.5" /><path d="M3 3l18 18" /></symbol>
+        <symbol id="i-spk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" fill="currentColor" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></symbol>
+        <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z" /></symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 5h4v14h-4zM13.5 5h4v14h-4z" /></symbol>
+        <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M6 13l6 6 6-6" /></symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" /></symbol>
+        <symbol id="i-move" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4" /></symbol>
+        <symbol id="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="7" r="3.5" /><path d="M5 21a7 7 0 0 1 14 0" /></symbol>
+        <symbol id="i-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v4.5h4.5" /></symbol>
+        <symbol id="i-film" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" /></symbol>
+        <symbol id="i-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L2.5 20h19z" /><path d="M12 10v4.5M12 17.5v.01" /></symbol>
+        <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5" /><path d="M11 18.5h2" /></symbol>
+        <symbol id="i-laptop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="5" width="15" height="10.5" rx="1.5" /><path d="M2 19h20" /></symbol>
+        <symbol id="i-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4a1.5 1.5 0 0 1 3 0v7M14 10.5V5.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-.5a6 6 0 0 1-4.6-2.2L2.8 15.6a1.5 1.5 0 0 1 2.2-2L8 16" /></symbol>
+        <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></symbol>
+      </defs>
+    </svg>
+
+    <div id="app">
+      <!-- ============ 1. START (prototype home) ============ -->
+      <section class="screen start" id="screen-start" aria-labelledby="start-title">
+        <div class="row between">
+          <span class="pill lock"><svg><use href="#i-lock" /></svg>YouTube is locked</span>
+          <span class="pill proto">Prototype</span>
+        </div>
+
+        <div class="start-hero">
+          <h1 class="sr-only" id="start-title">Push-up test</h1>
+          <span class="big hero-n" id="hero-reps">10</span>
+          <span class="hero-unit">push-ups</span>
+          <span class="hero-sub">to open YouTube</span>
+          <p class="small hero-note">Your camera counts the reps, right on this <span class="only-phone">phone</span><span class="only-desktop">computer</span>. No video is saved or uploaded.</p>
+        </div>
+
+        <div class="banner bad" id="env-banner" role="alert" hidden>
+          <svg class="ico"><use href="#i-warn" /></svg>
+          <span id="env-banner-text">Open the https:// address — the camera only works on https</span>
+        </div>
+
+        <div class="col g8">
+          <button class="btn pri xl" id="btn-start" type="button">Start</button>
+          <button class="btn sec" id="btn-video" type="button"><svg><use href="#i-film" /></svg>Test with a video file</button>
+          <input type="file" id="file-input" accept="video/*" hidden />
+          <!-- A simulated person goes through the real counter: no camera, nothing to download -->
+          <button class="btn ghost" id="btn-demo" type="button"><svg><use href="#i-play" /></svg>Watch a demo</button>
+        </div>
+
+        <p class="tip only-phone"><svg class="ico"><use href="#i-phone" /></svg><span>Turn on Portrait Orientation Lock, then prop the phone up on the floor ~3 ft away</span></p>
+        <p class="tip only-desktop"><svg class="ico"><use href="#i-laptop" /></svg><span>Put your laptop on the floor, screen tilted back, about 3 ft from your head</span></p>
+
+        <div class="settings">
+          <h2 class="glabel2">Settings</h2>
+          <div class="group" id="settings">
+            <div class="it">
+              <span class="lbl">Reps</span>
+              <div class="stepper" role="group" aria-label="Reps">
+                <button type="button" data-step="-1" aria-label="Fewer reps">−</button>
+                <output id="set-reps" aria-live="polite">10</output>
+                <button type="button" data-step="1" aria-label="More reps">+</button>
+              </div>
+            </div>
+            <div class="it">
+              <span class="lbl">Depth</span>
+              <div class="seg" role="group" aria-label="Depth" data-setting="depth">
+                <button type="button" data-value="lenient">Lenient</button>
+                <button type="button" data-value="normal">Normal</button>
+                <button type="button" data-value="strict">Strict</button>
+              </div>
+            </div>
+            <div class="it">
+              <span class="lbl">Model</span>
+              <div class="seg" role="group" aria-label="Model" data-setting="model">
+                <button type="button" data-value="lite">Lite</button>
+                <button type="button" data-value="full">Full</button>
+              </div>
+            </div>
+            <div class="it">
+              <span class="lbl">Processor</span>
+              <div class="seg" role="group" aria-label="Processor" data-setting="delegate">
+                <button type="button" data-value="auto">Auto</button>
+                <button type="button" data-value="GPU">GPU</button>
+                <button type="button" data-value="CPU">CPU</button>
+              </div>
+            </div>
+            <label class="it"><span class="lbl">Speak counts</span><input type="checkbox" class="tgl" role="switch" data-setting="speak" /></label>
+            <label class="it"><span class="lbl">Debug view</span><input type="checkbox" class="tgl" role="switch" data-setting="debug" /></label>
+            <label class="it"><span class="lbl">Record landmarks</span><input type="checkbox" class="tgl" role="switch" data-setting="record" /></label>
+          </div>
+          <p class="gfoot">Depth = how low a rep must go. Lite is faster, Full is steadier. Recording keeps body points only (never video) so you can save them after a set.</p>
+        </div>
+
+        <button class="btn ghost" id="btn-save-start" type="button" hidden><svg><use href="#i-save" /></svg><span>Save last recording</span></button>
+        <p class="env-line" id="env-line"></p>
+      </section>
+
+      <!-- ============ 2–4. CAMERA STAGE (Placement + Challenge share one video) ============ -->
+      <section class="stage mirror" id="screen-stage" aria-label="Push-up camera" hidden>
+        <video id="video" autoplay muted playsinline disablepictureinpicture></video>
+        <canvas class="overlay" id="overlay" aria-hidden="true"></canvas>
+        <div class="vignette" aria-hidden="true"></div>
+        <div class="scrim-top" aria-hidden="true"></div>
+        <div class="scrim-bot" aria-hidden="true"></div>
+
+        <!-- Spec 3: Phone placement -->
+        <div class="layer placement" id="layer-placement" hidden>
+          <div class="place-head">
+            <div class="row between">
+              <h2 class="h-l"><span class="only-phone">Prop it up</span><span class="only-desktop">Laptop on the floor</span></h2>
+              <span class="small">Step back</span>
+            </div>
+            <div class="card diagram">
+              <svg class="only-phone" viewBox="0 0 250 100" width="100%" role="img" aria-label="Plank with your head toward the phone, phone upright about 3 feet away">
+                <line x1="4" y1="84" x2="246" y2="84" stroke="#55555D" stroke-width="2" />
+                <circle cx="150" cy="54" r="8" fill="#F5F5F2" />
+                <path d="M140 60 L28 80" stroke="#F5F5F2" stroke-width="7" stroke-linecap="round" />
+                <path d="M139 61 L141 83" stroke="#F5F5F2" stroke-width="5" stroke-linecap="round" />
+                <rect x="220" y="46" width="13" height="36" rx="3" fill="#FFD43B" />
+                <path d="M232 70 L242 83" stroke="#FFD43B" stroke-width="3" stroke-linecap="round" />
+                <circle cx="226.5" cy="51" r="1.8" fill="#191300" />
+                <path d="M158 94 L218 94 M158 90 v8 M218 90 v8" stroke="#FFD43B" stroke-width="1.5" />
+                <text x="188" y="78" fill="#FFD43B" font-family="Barlow Condensed,system-ui" font-weight="800" font-size="15" text-anchor="middle">~3 FT</text>
+                <text x="6" y="16" fill="#8E8E96" font-family="-apple-system,system-ui" font-size="10.5">Head toward the phone</text>
+                <text x="244" y="16" fill="#8E8E96" font-family="-apple-system,system-ui" font-size="10.5" text-anchor="end">Upright, screen facing you</text>
+              </svg>
+              <!-- Laptop: keyboard flat on the floor, screen tilted back and facing the person -->
+              <svg class="only-desktop" viewBox="0 0 250 100" width="100%" role="img" aria-label="Plank with your head toward the laptop screen, laptop on the floor about 3 feet away with the screen tilted back">
+                <line x1="4" y1="84" x2="246" y2="84" stroke="#55555D" stroke-width="2" />
+                <circle cx="150" cy="54" r="8" fill="#F5F5F2" />
+                <path d="M140 60 L28 80" stroke="#F5F5F2" stroke-width="7" stroke-linecap="round" />
+                <path d="M139 61 L141 83" stroke="#F5F5F2" stroke-width="5" stroke-linecap="round" />
+                <rect x="186" y="78.5" width="42" height="5" rx="1.5" fill="#FFD43B" />
+                <path d="M226 80 L238 46" stroke="#FFD43B" stroke-width="5" stroke-linecap="round" />
+                <circle cx="235.2" cy="54" r="1.5" fill="#191300" />
+                <path d="M158 94 L224 94 M158 90 v8 M224 90 v8" stroke="#FFD43B" stroke-width="1.5" />
+                <text x="172" y="72" fill="#FFD43B" font-family="Barlow Condensed,system-ui" font-weight="800" font-size="15" text-anchor="middle">~3 FT</text>
+                <text x="6" y="16" fill="#8E8E96" font-family="-apple-system,system-ui" font-size="10.5">Head toward the screen</text>
+                <text x="244" y="16" fill="#8E8E96" font-family="-apple-system,system-ui" font-size="10.5" text-anchor="end">Screen tilted back</text>
+              </svg>
+            </div>
+          </div>
+          <!-- Green corner brackets around the live view once you're in frame -->
+          <div class="frame-ok" id="frame-ok" hidden></div>
+          <div class="place-foot">
+            <div class="hint" id="place-hint" aria-live="polite">
+              <svg class="ico"><use id="place-hint-icon" href="#i-person" /></svg>
+              <span id="place-hint-text">Get your head, shoulders and hands in view</span>
+            </div>
+            <div class="countdown" id="place-countdown" hidden>
+              <div class="inframe"><svg><use href="#i-check" /></svg>You're in frame</div>
+              <div class="cd-row">
+                <span class="cd-label">Hold plank.<br /><span>Starting in</span></span>
+                <span class="big cd-n" id="cd-n">3</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spec 4: Challenge (+ S2 paused, S4 partial rep) -->
+        <div class="layer challenge" id="layer-challenge" hidden>
+          <div class="ch-top">
+            <div class="segs" id="segs"></div>
+            <div class="ch-chips">
+              <span class="pill paused-pill" id="paused-pill" hidden><svg><use href="#i-pause" /></svg>Paused</span>
+              <span class="pill nocount" id="nocount-pill" hidden>Didn't count</span>
+              <span class="voice" id="voice"><svg><use href="#i-spk" /></svg>Counting aloud · <span class="w" id="voice-word">“Go”</span></span>
+            </div>
+            <div class="counter" id="counter" aria-live="polite"><span class="big n" id="count">0</span><span class="of" id="count-of">/10</span></div>
+          </div>
+          <div class="ch-mid">
+            <span class="glabel">DEPTH</span>
+            <div class="gauge" id="gauge" aria-hidden="true"><div class="mark"></div><div class="f" id="gauge-fill"></div></div>
+            <div class="ghost-sil" id="ghost-sil" hidden></div>
+            <div class="cue-small" id="chest-cue" hidden>Chest down, not just your head</div>
+            <div class="cue off" id="cue" role="status"><svg><use href="#i-down" /></svg>Go lower</div>
+          </div>
+          <div class="lost" id="lost-block" hidden>
+            <span class="lost-title" id="lost-title">Can't
+see you</span>
+            <div class="lost-tips">
+              <div class="row"><svg class="ico"><use href="#i-person" /></svg><span id="lost-tip-1">Head and shoulders in frame</span></div>
+              <div class="row"><svg class="ico"><use href="#i-move" /></svg><span id="lost-tip-2">Phone about 3 ft away</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spec S3: Poor lighting -->
+        <div class="dark-ov" id="dark-ov" role="alert" hidden>
+          <div class="sun"><svg><use href="#i-sun" /></svg></div>
+          <span class="dark-title">Too dark</span>
+          <span class="dark-sub">Turn on a light<br />or face a window</span>
+        </div>
+
+        <div class="toast" id="stage-toast" role="status" hidden></div>
+
+        <!-- Shown only in the demo (CSS: .stage.demo), so nobody mistakes it for their camera -->
+        <div class="demo-tag">
+          <span class="demo-tag-label" aria-hidden="true"><svg><use href="#i-play" /></svg>Demo<span class="demo-tag-more">· simulated person</span></span>
+          <button class="demo-exit" id="btn-demo-exit" type="button" title="Back to the start screen (Esc)">✕ Exit demo</button>
+        </div>
+
+        <button class="giveup" id="btn-giveup" type="button">Give up</button>
+
+        <!-- Debug view (toggle in Settings) -->
+        <div class="debug" id="debug" hidden>
+          <div class="dbg-body" id="dbg-body" hidden>
+            <pre class="dbg-stats" id="dbg-stats"></pre>
+            <canvas class="dbg-chart" id="dbg-chart" aria-label="Depth over the last 10 seconds"></canvas>
+            <div class="dbg-legend"><span><i class="k-down"></i>down</span><span><i class="k-partial"></i>partial</span><span><i class="k-up"></i>up</span><span><i class="k-rep"></i>rep</span><span><i class="k-miss"></i>didn't count</span></div>
+            <div class="dbg-sliders">
+              <label><span>down</span><input type="range" id="sl-down" min="0.10" max="0.50" step="0.01" /><output id="sl-down-v"></output></label>
+              <label><span>partial</span><input type="range" id="sl-partial" min="0.04" max="0.40" step="0.01" /><output id="sl-partial-v"></output></label>
+              <label><span>up</span><input type="range" id="sl-up" min="0.00" max="0.25" step="0.01" /><output id="sl-up-v"></output></label>
+            </div>
+            <div class="dbg-h">Events</div>
+            <ol class="dbg-events" id="dbg-events"></ol>
+            <div class="dbg-h">Recording</div>
+            <p class="dbg-rec" id="dbg-rec"></p>
+          </div>
+          <div class="dbg-bar">
+            <button class="dbg-chip" id="dbg-toggle" type="button" aria-expanded="false" aria-controls="dbg-body"><span id="dbg-summary">debug</span> <span class="chev" aria-hidden="true">▴</span></button>
+            <button class="dbg-chip warn" id="dbg-lite" type="button" hidden>Slow · switch to Lite</button>
+          </div>
+        </div>
+
+        <div class="loading-ov" id="loading-ov" hidden>
+          <div class="spin" id="loading-spin" aria-hidden="true"></div>
+          <p class="loading-msg" id="loading-msg" role="status">Starting camera…</p>
+          <p class="small" id="loading-sub"></p>
+          <div class="loading-err col g8" id="loading-err" hidden>
+            <p class="txt" id="loading-err-text"></p>
+            <button class="btn pri" id="btn-load-retry" type="button"><svg><use href="#i-redo" /></svg>Try again</button>
+          </div>
+          <button class="btn ghost" id="btn-load-cancel" type="button">Cancel</button>
+        </div>
+
+        <button class="resume-ov" id="resume-ov" type="button" hidden>
+          <span class="resume-ic"><svg><use href="#i-play" /></svg></span>
+          <span class="resume-t">Tap to resume</span>
+          <span class="small">The camera pauses when the screen locks or you switch apps. Your count is kept.</span>
+        </button>
+      </section>
+
+      <!-- ============ 5. SUCCESS ============ -->
+      <section class="screen success" id="screen-success" aria-labelledby="succ-title" hidden>
+        <div class="col grow center-v">
+          <h1 class="succ-title" id="succ-title">Scroll earned.</h1>
+          <span class="big succ-time">15:00</span>
+          <span class="succ-sub">YouTube unlocked<br />for 15 minutes</span>
+          <span class="succ-note">(prototype — nothing is unlocked yet)</span>
+          <div class="row succ-stats"><svg><use href="#i-check" /></svg><span id="succ-stats">10 push-ups · 38 sec</span></div>
+        </div>
+        <div class="col g8">
+          <button class="btn blk" id="btn-again" type="button"><svg><use href="#i-redo" /></svg>Again</button>
+          <button class="btn ghost ink" id="btn-succ-done" type="button">Done</button>
+          <button class="btn ghost ink" id="btn-save-succ" type="button" hidden><svg><use href="#i-save" /></svg><span>Save recording</span></button>
+        </div>
+      </section>
+
+      <!-- ============ 6. GAVE UP ============ -->
+      <section class="screen" id="screen-gaveup" aria-labelledby="gaveup-title" hidden>
+        <div class="col grow g12 center-v">
+          <div class="tile"><svg><use href="#i-lock" /></svg></div>
+          <h1 class="h-xl" id="gaveup-title">YouTube stays locked</h1>
+          <p class="txt">No push-ups, no scroll. Fair trade. It'll be here when you're ready.</p>
+          <p class="small">Head anywhere else you like. YouTube unlocks after a full set.</p>
+        </div>
+        <div class="col g4">
+          <button class="btn pri" id="btn-tryagain" type="button"><svg><use href="#i-redo" /></svg>Try again</button>
+          <button class="btn ghost" id="btn-gaveup-done" type="button">Done</button>
+          <button class="btn ghost" id="btn-save-gaveup" type="button" hidden><svg><use href="#i-save" /></svg><span>Save recording</span></button>
+        </div>
+      </section>
+
+      <!-- ============ S1. CAMERA PROBLEMS ============ -->
+      <section class="screen" id="screen-camerror" aria-labelledby="camerr-title" hidden>
+        <div class="col grow g12 center-v">
+          <div class="tile bad"><svg><use href="#i-camoff" /></svg></div>
+          <h1 class="h-xl" id="camerr-title">Camera is off</h1>
+          <p class="txt" id="camerr-body">We need it to count your reps. Video stays on this iPhone and is never saved.</p>
+          <div class="card">
+            <ol class="steps" id="camerr-steps"></ol>
+          </div>
+          <p class="small" id="camerr-note"></p>
+          <p class="small mono" id="camerr-detail"></p>
+        </div>
+        <div class="col g4">
+          <button class="btn pri" id="btn-camerr-retry" type="button"><svg><use href="#i-redo" /></svg>Try again</button>
+          <button class="btn ghost" id="btn-camerr-back" type="button">Back</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- On-screen error log (works on every screen; there is no Web Inspector on Windows) -->
+    <div class="errlog" id="errlog" hidden>
+      <button class="errlog-badge" id="errlog-badge" type="button" aria-expanded="false" aria-controls="errlog-panel">
+        <svg><use href="#i-warn" /></svg><span id="errlog-count">1 error</span>
+      </button>
+      <div class="errlog-panel" id="errlog-panel" hidden>
+        <div class="row between">
+          <b>Errors</b>
+          <span class="row g8">
+            <button type="button" id="errlog-copy">Copy</button>
+            <button type="button" id="errlog-clear">Clear</button>
+            <button type="button" id="errlog-close">Close</button>
+          </span>
+        </div>
+        <ol id="errlog-list"></ol>
+      </div>
+    </div>
+
+    <!-- Shown by the boot script above if the app never starts -->
+    <div class="boot-fail" id="boot-fail" role="alert" hidden>
+      <h1 class="h-xl">The app didn't start</h1>
+      <p class="txt">Reload the page. If it keeps happening, copy this for the developer:</p>
+      <pre id="boot-fail-text"></pre>
+      <button class="btn pri" type="button" onclick="location.reload()">Reload</button>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
