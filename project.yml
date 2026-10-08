@@ -22,3 +22,20 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Doomscroller Blocker
         INFOPLIST_KEY_NSCameraUsageDescription: "Doomscroller Blocker uses the camera to count your push-ups."
         CODE_SIGN_STYLE: Automatic
+    scheme:
+      testTargets: [DoomscrollerBlockerTests]
+  DoomscrollerBlockerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - DoomscrollerBlockerTests
+      # One source of truth for fixtures: the web prototype's own files.
+      - path: web-prototype/tests/fixtures
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - target: DoomscrollerBlocker
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.0"
