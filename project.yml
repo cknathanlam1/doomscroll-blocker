@@ -28,7 +28,12 @@ targets:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - DoomscrollerBlockerTests
+      - path: DoomscrollerBlockerTests
+        excludes: [RealRecordings]
+      # A real iPhone recording (Vision), used to tune the Vision-specific adapter.
+      - path: DoomscrollerBlockerTests/RealRecordings
+        type: folder
+        buildPhase: resources
       # One source of truth for fixtures: the web prototype's own files.
       - path: web-prototype/tests/fixtures
         type: folder

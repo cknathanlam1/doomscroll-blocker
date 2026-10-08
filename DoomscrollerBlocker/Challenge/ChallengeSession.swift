@@ -78,6 +78,8 @@ final class ChallengeSession: ObservableObject {
     private let speech = SpeechService()
     private var counter = RepCounter(.visionDefault)
     private let tracking = TrackingIssueDetector()
+    /// Vision-only help for the bottom of a rep (see PoseHold). The recording keeps the RAW frames.
+    private var hold = PoseHold()
     private var lastLowerSpokenAt = -Double.infinity
     private var pendingSuccessAt: Double?
     private var successTask: Task<Void, Never>?
@@ -113,6 +115,7 @@ final class ChallengeSession: ObservableObject {
         source = kind
         counter = RepCounter(makeConfig())
         tracking.reset()
+        hold.reset()
         snapshot = nil
         frame = nil
         issue = .none
@@ -217,7 +220,12 @@ final class ChallengeSession: ObservableObject {
         // Without a recent reading we never claim it is dark.
         let lum = f.t - lastLuminanceAt < 1500 ? lastLuminance : nil
 
-        let snap = counter.update(f)
+        var counted = f
+        if source == .camera {
+            let counting = snapshot?.phase == .counting
+            counted = hold.apply(f, counting: counting, midAttempt: counting && snapshot?.motion != .up)
+        }
+        let snap = counter.update(counted)
         frame = f
         snapshot = snap
         self.detectMs = detectMs
