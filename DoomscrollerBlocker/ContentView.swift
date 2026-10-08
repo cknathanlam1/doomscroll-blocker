@@ -3,6 +3,8 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.openURL) private var openURL
     @StateObject private var log = OpenLog.shared
+    @StateObject private var challenge = ChallengeSession()
+    @State private var showChallenge = ProcessInfo.processInfo.arguments.contains("-autoDemo")
 
     var body: some View {
         NavigationStack {
@@ -27,16 +29,49 @@ struct ContentView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                Button {
-                    log.startPass()
-                    openURL(URL(string: "youtube://")!)
-                } label: {
-                    Text("Open YouTube (30 min pass)")
-                        .frame(maxWidth: .infinity)
+                VStack(spacing: 8) {
+                    Button {
+                        challenge.start(.camera)
+                        showChallenge = true
+                    } label: {
+                        Text("Do the push-ups")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    #if DEBUG
+                    HStack {
+                        Button("Watch a demo") {
+                            challenge.start(.demo)
+                            showChallenge = true
+                        }
+                        Spacer()
+                        Button("Open YouTube (no push-ups)") {
+                            log.startPass()
+                            openURL(URL(string: "youtube://")!)
+                        }
+                    }
+                    .font(.footnote)
+                    #endif
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
                 .padding()
+            }
+            .fullScreenCover(isPresented: $showChallenge) {
+                ChallengeFlowView(
+                    session: challenge,
+                    onUnlock: {
+                        showChallenge = false
+                        log.startPass()
+                        openURL(URL(string: "youtube://")!)
+                    },
+                    onClose: {
+                        challenge.stop()
+                        showChallenge = false
+                    }
+                )
+            }
+            .onAppear {
+                if showChallenge, challenge.screen == .idle { challenge.start(.demo) }
             }
             .navigationTitle("Doomscroller Blocker")
             .toolbar {
