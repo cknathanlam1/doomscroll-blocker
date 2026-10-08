@@ -1,35 +1,18 @@
 import SwiftUI
 import AVFoundation
 
-/// Live front-camera feed. No counting yet.
+/// Live front-camera feed (the usual mirrored selfie view) for a session owned by `PoseCamera`.
 struct CameraPreview: UIViewRepresentable {
+    let session: AVCaptureSession
+
     func makeUIView(context: Context) -> PreviewView {
         let view = PreviewView()
-        let session = AVCaptureSession()
-        session.sessionPreset = .high
-        if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front),
-           let input = try? AVCaptureDeviceInput(device: device),
-           session.canAddInput(input) {
-            session.addInput(input)
-        }
         view.previewLayer.session = session
         view.previewLayer.videoGravity = .resizeAspectFill
-        context.coordinator.session = session
-        DispatchQueue.global(qos: .userInitiated).async { session.startRunning() }
         return view
     }
 
     func updateUIView(_ uiView: PreviewView, context: Context) {}
-
-    static func dismantleUIView(_ uiView: PreviewView, coordinator: Coordinator) {
-        coordinator.session?.stopRunning()
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator() }
-
-    final class Coordinator {
-        var session: AVCaptureSession?
-    }
 
     final class PreviewView: UIView {
         override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
@@ -37,27 +20,23 @@ struct CameraPreview: UIViewRepresentable {
     }
 }
 
-/// Asks for camera permission, then shows the feed.
-struct CameraScreen: View {
-    @State private var status = AVCaptureDevice.authorizationStatus(for: .video)
+/// Maps core coordinates (unmirrored image, y down, both axes in image-HEIGHT units) onto a
+/// view that shows the camera with `.resizeAspectFill` and the selfie mirror (UI_SPEC §3.2).
+struct OverlayFit {
+    let size: CGSize
+    let aspect: Double
 
-    var body: some View {
-        Group {
-            switch status {
-            case .authorized:
-                CameraPreview().ignoresSafeArea()
-            case .notDetermined:
-                ProgressView().task {
-                    _ = await AVCaptureDevice.requestAccess(for: .video)
-                    status = AVCaptureDevice.authorizationStatus(for: .video)
-                }
-            default:
-                Text("Camera access is off. Turn it on in Settings → Doomscroller Blocker.")
-                    .multilineTextAlignment(.center)
-                    .padding()
-            }
-        }
-        .navigationTitle("Camera")
-        .navigationBarTitleDisplayMode(.inline)
+    private var scale: Double { max(Double(size.width) / aspect, Double(size.height)) }
+    private var offsetX: Double { (Double(size.width) - aspect * scale) / 2 }
+    private var offsetY: Double { (Double(size.height) - scale) / 2 }
+
+    func point(x: Double, y: Double) -> CGPoint {
+        let sx = offsetX + x * scale
+        let sy = offsetY + y * scale
+        // The preview is mirrored like a selfie; the overlay must be too (text never is).
+        return CGPoint(x: Double(size.width) - sx, y: sy)
     }
+
+    /// Image-height units → points, for line widths and radii.
+    func length(_ u: Double) -> CGFloat { CGFloat(u * scale) }
 }

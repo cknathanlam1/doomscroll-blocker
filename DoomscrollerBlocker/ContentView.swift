@@ -41,7 +41,7 @@ struct ContentView: View {
             .navigationTitle("Doomscroller Blocker")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    NavigationLink("Camera") { CameraScreen() }
+                    NavigationLink("Pose debug") { PoseDebugScreen() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Clear", action: log.clear)
