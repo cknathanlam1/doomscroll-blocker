@@ -63,13 +63,24 @@ final class ChallengeSession: ObservableObject {
     @Published private(set) var fps: Double = 0
     @Published private(set) var detectMs: Double = 0
     @Published private(set) var recordedFrames = 0
+    /// Frame clock (ms) until which the chest-not-head cue stays on.
+    @Published private(set) var chestUntil: Double = -.infinity
+    /// Non-nil while the "Starting camera…" / "Restarting camera…" overlay shows.
+    @Published private(set) var loadingMessage: String?
+    /// The automatic camera restart after returning to the app failed: show "Tap to resume".
+    @Published private(set) var needsTapToResume = false
+    /// A short message on the stage (4 s), e.g. "Demo finished. Tap Give up to leave."
+    @Published private(set) var toast: String?
+    /// The demo is not playing by itself (debug stepping, see `demoStep`).
+    @Published private(set) var demoPaused = false
 
     // MARK: Settings (UI_SPEC §4.8)
 
     @AppStorage("reps") var reps = 10
     @AppStorage("depth") var depthPreset = "normal"
     @AppStorage("speak") var speak = true
-    @AppStorage("debug") var debug = true
+    /// Developer panel and joint colours by confidence. Off by default: the shipped look is the one in docs/screenshots.
+    @AppStorage("debug") var debug = false
 
     // MARK: Plumbing
 
@@ -90,6 +101,16 @@ final class ChallengeSession: ObservableObject {
     private var lastLuminance: Double?
     private var lastLuminanceAt = -Double.infinity
     private var suspended = false
+    private var lastMotion: MotionPhase = .up
+    /// From the `complete` event: what Success reports ("10 push-ups · 26 sec").
+    private var completed: (count: Int, elapsedMs: Double)?
+    private var toastTask: Task<Void, Never>?
+    private var demoRunner: DemoRunner?
+    private let demoLink = DisplayLinkProxy()
+    /// Scales the demo clock (1 = real time). Debug launch argument `-demoSpeed`.
+    private var demoSpeed = 1.0
+    /// Debug: pause the demo once it has played this many frames (`-demoRunTo`).
+    private var demoStopAt: Int?
 
     /// "Go lower" / chest cues stay up this long (UI_SPEC §4.5).
     static let cueMs = 1500.0
@@ -123,11 +144,18 @@ final class ChallengeSession: ObservableObject {
         partialPeak = 0
         cueUntil = -.infinity
         pauseReason = nil
-        voiceWord = nil
+        voiceWord = "Go"
+        chestUntil = -.infinity
+        loadingMessage = nil
+        needsTapToResume = false
+        toast = nil
+        demoPaused = false
+        lastMotion = .up
         repTick = 0
         countdownTick = 0
         lastLowerSpokenAt = -.infinity
         pendingSuccessAt = nil
+        completed = nil
         recording = []
         recordedEvents = []
         recordedFrames = 0
@@ -141,10 +169,11 @@ final class ChallengeSession: ObservableObject {
         switch kind {
         case .camera:
             screen = .loading
+            loadingMessage = "Starting camera…"
             requestCameraAndStart()
         case .demo:
-            // The demo driver feeds `ingest(_:luminance:)`; see DemoStage.
             screen = .stage
+            startDemo()
         }
     }
 
@@ -162,23 +191,31 @@ final class ChallengeSession: ObservableObject {
         }
     }
 
-    private func startCamera() {
+    /// `onFailure` is called on the main queue when the camera can't be started.
+    private func startCamera(onFailure: (() -> Void)? = nil) {
         camera.onSample = { [weak self] sample in
             DispatchQueue.main.async { self?.ingest(sample.frame, luminance: sample.luminance, detectMs: sample.detectMs) }
         }
         camera.start { [weak self] ok in
             guard let self else { return }
-            if !ok { self.screen = .cameraError(.notFound) }
+            if ok { return }
+            self.loadingMessage = nil
+            if let onFailure { onFailure() } else { self.screen = .cameraError(.notFound) }
         }
     }
 
     /// Stops the camera, speech and the idle-timer override. Keeps the counter state.
     func stop(keepScreen: Bool = false) {
         successTask?.cancel()
+        stopDemo()
         camera.onSample = nil
         camera.stop()
         speech.deactivate()
         UIApplication.shared.isIdleTimerDisabled = false
+        loadingMessage = nil
+        needsTapToResume = false
+        toastTask?.cancel()
+        toast = nil
         if !keepScreen { screen = .idle }
     }
 
@@ -198,21 +235,61 @@ final class ChallengeSession: ObservableObject {
         camera.onSample = nil
         camera.stop()
         speech.cancel()
+        demoRunner?.pause()
     }
 
-    /// Back in the foreground: restart the camera by itself.
+    /// Back in the foreground: restart the camera by itself (the demo just carries on).
     func resume() {
-        guard suspended, source == .camera else { return }
+        guard suspended else { return }
         suspended = false
-        startCamera()
+        switch source {
+        case .demo:
+            if !demoPaused { demoRunner?.play(atMs: demoClockMs()) }
+        case .camera:
+            restartCamera()
+        }
+    }
+
+    /// "Tap to resume" fallback: the automatic restart failed, so the user taps once.
+    func tapToResume() {
+        needsTapToResume = false
+        restartCamera()
+    }
+
+    private func restartCamera() {
+        loadingMessage = "Restarting camera…"
+        startCamera { [weak self] in self?.needsTapToResume = true }
+    }
+
+    // MARK: Toast
+
+    func showToast(_ text: String) {
+        toastTask?.cancel()
+        toast = text
+        toastTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(4))
+            guard !Task.isCancelled else { return }
+            self?.toast = nil
+        }
     }
 
     // MARK: Frames
 
-    /// One frame in (from the camera or the demo), one snapshot out. Handles the events like `App.handleEvent`.
+    /// One camera frame in, one snapshot out. Handles the events like `App.handleEvent`.
     func ingest(_ f: PoseFrame, luminance: Double? = nil, detectMs: Double = 0) {
         guard screen == .loading || screen == .stage, !suspended else { return }
+        // The camera path bridges short detector dropouts (PoseHold) before the counter sees the frame.
+        let counting = snapshot?.phase == .counting
+        let counted = hold.apply(f, counting: counting, midAttempt: counting && snapshot?.motion != .up)
+        let snap = counter.update(counted)
+        process(f, snap, luminance: luminance, detectMs: detectMs, issueOverride: nil)
+    }
+
+    /// Everything that follows a frame, whether the counter ran here (camera) or in the demo runner.
+    private func process(_ f: PoseFrame, _ snap: CounterSnapshot, luminance: Double?, detectMs: Double, issueOverride: TrackingIssue?) {
+        guard screen == .loading || screen == .stage, !suspended else { return }
         if screen == .loading { screen = .stage }
+        if loadingMessage != nil { loadingMessage = nil }
         if let luminance {
             lastLuminance = luminance
             lastLuminanceAt = f.t
@@ -220,29 +297,32 @@ final class ChallengeSession: ObservableObject {
         // Without a recent reading we never claim it is dark.
         let lum = f.t - lastLuminanceAt < 1500 ? lastLuminance : nil
 
-        var counted = f
-        if source == .camera {
-            let counting = snapshot?.phase == .counting
-            counted = hold.apply(f, counting: counting, midAttempt: counting && snapshot?.motion != .up)
-        }
-        let snap = counter.update(counted)
         frame = f
         snapshot = snap
         self.detectMs = detectMs
         updateFps(f.t)
 
-        issue = tracking.update(TrackingIssueInput(
-            t: f.t,
-            present: snap.features.present,
-            inFrame: snap.inFrame,
-            shoulderConfidence: snap.features.shoulderConfidence,
-            luminance: source == .camera ? lum : nil
-        ))
+        if let issueOverride {
+            issue = issueOverride
+        } else {
+            issue = tracking.update(TrackingIssueInput(
+                t: f.t,
+                present: snap.features.present,
+                inFrame: snap.inFrame,
+                shoulderConfidence: snap.features.shoulderConfidence,
+                luminance: source == .camera ? lum : nil
+            ))
+        }
 
         for e in snap.events { handle(e, snap) }
         if snap.phase != .paused { pauseReason = nil }
+        // A new descent starts a new attempt: the gauge and depth line go back to white (UI_SPEC §2.4.5).
+        if snap.motion != .up && lastMotion == .up { attempt = .none }
+        lastMotion = snap.motion
+        if snap.hint == .chestNotHead { chestUntil = f.t + Self.cueMs }
 
-        do {
+        // The demo is simulated: nothing to record.
+        if source == .camera {
             recording.append(RecordingFrame(
                 t: f.t, aspect: f.aspect, joints: f.joints, world: f.world,
                 depth: snap.depth, phase: snap.phase, count: snap.count
@@ -274,7 +354,7 @@ final class ChallengeSession: ObservableObject {
         case .depthReached:
             attempt = .reached
         case .rep(_, let count, _, _):
-            attempt = .none
+            // `attempt` stays `.reached` (volt gauge and line) until the next descent starts.
             repTick += 1
             say(SpeechService.countWord(count))
         case .partial(let t, let peak, _):
@@ -287,7 +367,8 @@ final class ChallengeSession: ObservableObject {
             }
         case .paused(_, let reason):
             pauseReason = reason
-        case .complete(let t, _, _):
+        case .complete(let t, let count, let elapsedMs):
+            completed = (count, elapsedMs)
             pendingSuccessAt = t + Self.successDelayMs
             successTask?.cancel()
             successTask = Task { [weak self] in
@@ -298,8 +379,6 @@ final class ChallengeSession: ObservableObject {
         case .inFrame, .countdownCancelled, .resumed, .repCancelled:
             break
         }
-        // The cue and attempt look expire with the frame clock.
-        if attempt == .partial, snap.features.t >= cueUntil { attempt = .none }
     }
 
     private func say(_ word: String) {
@@ -312,11 +391,17 @@ final class ChallengeSession: ObservableObject {
         guard case .stage = screen, let snap = snapshot else { return }
         pendingSuccessAt = nil
         successTask?.cancel()
-        let elapsed: Double
-        if let started = snap.startedAt { elapsed = snap.features.t - started } else { elapsed = 0 }
+        let done: (count: Int, elapsedMs: Double)
+        if let completed {
+            done = completed
+        } else {
+            done = (snap.count, snap.startedAt.map { snap.features.t - $0 } ?? 0)
+        }
+        stopDemo()
         camera.onSample = nil
         camera.stop()
-        screen = .success(count: snap.count, elapsedMs: elapsed)
+        loadingMessage = nil
+        screen = .success(count: done.count, elapsedMs: done.elapsedMs)
         speech.speak("Scroll earned")
         UIApplication.shared.isIdleTimerDisabled = false
     }
@@ -354,4 +439,187 @@ final class ChallengeSession: ObservableObject {
     }
 
     var config: CounterConfig { counter.config }
+
+    /// Every counter event of this set so far (the debug panel lists the last few).
+    var debugEvents: [CounterEvent] { recordedEvents }
+
+    // MARK: Demo ("Watch a demo")
+
+    /// Plays the scripted simulated person through the session's OWN counter, in real time
+    /// (UI_SPEC §5.4). `DemoRunner` runs the frames; every frame then goes through `process`
+    /// like a camera frame, so the same events reach the UI and the speech.
+    private func startDemo() {
+        let debug = DemoDebug.current
+        let target = min(30, max(5, reps))
+        let runner = DemoRunner(frames: buildDemoSession(target).frames, counter: counter)
+        demoRunner = runner
+        demoSpeed = debug.speed
+        demoStopAt = debug.runTo
+        runner.onFrame = { [weak self] df in
+            guard let self else { return }
+            self.process(df.frame, df.snapshot, luminance: nil, detectMs: 0, issueOverride: df.issue)
+            if let stop = self.demoStopAt, df.index + 1 >= stop {
+                self.demoStopAt = nil
+                self.demoPause()
+            }
+        }
+        runner.onEnd = { [weak self] in
+            guard let self, self.screen == .stage else { return }
+            self.showToast("Demo finished. Tap Give up to leave.")
+        }
+        demoLink.onTick = { [weak self] in
+            guard let self, let runner = self.demoRunner else { return }
+            runner.advance(toMs: self.demoClockMs())
+        }
+        demoLink.start()
+        if debug.manual {
+            demoPaused = true
+        } else {
+            runner.play(atMs: demoClockMs())
+        }
+        #if DEBUG
+        startDebugCommandPolling()
+        if let name = debug.previewScreen { applyPreview(name) }
+        #endif
+    }
+
+    private func stopDemo() {
+        demoLink.stop()
+        demoRunner?.stop()
+        demoRunner = nil
+        demoStopAt = nil
+        demoPaused = false
+        #if DEBUG
+        debugCommandTimer?.invalidate()
+        debugCommandTimer = nil
+        #endif
+    }
+
+    /// The demo's display clock (ms): real time, scaled by the debug `-demoSpeed`.
+    private func demoClockMs() -> Double { CACurrentMediaTime() * 1000 * demoSpeed }
+
+    /// Debug: play `n` demo frames right now (the web's `window.__demo.step(n)`). Pauses real-time playback.
+    func demoStep(_ n: Int = 1) {
+        guard source == .demo, let runner = demoRunner else { return }
+        runner.pause()
+        demoPaused = true
+        runner.step(frames: n)
+    }
+
+    /// Debug: play until the demo has played `frame` frames, then hold there.
+    func demoStep(to frame: Int) {
+        guard source == .demo, let runner = demoRunner else { return }
+        demoStep(max(0, frame - runner.position))
+    }
+
+    func demoPause() {
+        demoRunner?.pause()
+        demoPaused = true
+    }
+
+    func demoPlay() {
+        guard source == .demo, let runner = demoRunner else { return }
+        demoPaused = false
+        runner.play(atMs: demoClockMs())
+    }
+
+    /// How many demo frames have played (debug readout), nil outside the demo.
+    var demoPosition: Int? { source == .demo ? demoRunner?.position : nil }
+
+    #if DEBUG
+    private var debugCommandTimer: Timer?
+
+    /// Debug: jump straight to a screen for screenshot checks (`-previewScreen gaveUp|denied|inUse|notFound|unknown|success|loading|resume|tooDark`).
+    private func applyPreview(_ name: String) {
+        switch name {
+        case "gaveUp": stop(keepScreen: true); screen = .gaveUp
+        case "denied": stop(keepScreen: true); screen = .cameraError(.denied)
+        case "inUse": stop(keepScreen: true); screen = .cameraError(.inUse)
+        case "notFound": stop(keepScreen: true); screen = .cameraError(.notFound)
+        case "unknown": stop(keepScreen: true); screen = .cameraError(.unknown("AVFoundationErrorDomain -11852"))
+        case "success": stop(keepScreen: true); screen = .success(count: 10, elapsedMs: 26_400)
+        case "loading": demoPause(); loadingMessage = "Starting camera…"
+        case "resume": demoPause(); needsTapToResume = true
+        case "tooDark": demoStep(to: 200); issue = .tooDark
+        default: break
+        }
+    }
+
+    /// Debug-only remote control for screenshot checks: write a command into `/tmp/pushup-demo-cmd`
+    /// (`step 30`, `to 211`, `play`, `pause`). The file is deleted once it was read.
+    private func startDebugCommandPolling() {
+        debugCommandTimer?.invalidate()
+        debugCommandTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            let path = "/tmp/pushup-demo-cmd"
+            guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { return }
+            try? FileManager.default.removeItem(atPath: path)
+            MainActor.assumeIsolated {
+                for line in text.split(separator: "\n") {
+                    let parts = line.split(separator: " ")
+                    guard let cmd = parts.first else { continue }
+                    let n = parts.count > 1 ? Int(parts[1]) : nil
+                    switch cmd {
+                    case "step": self?.demoStep(n ?? 1)
+                    case "to": self?.demoStep(to: n ?? 0)
+                    case "play": self?.demoPlay()
+                    case "pause": self?.demoPause()
+                    default: break
+                    }
+                }
+            }
+        }
+    }
+    #endif
+}
+
+/// Calls `onTick` on every screen refresh (the display link behind the demo's real-time playback).
+final class DisplayLinkProxy: NSObject {
+    var onTick: (() -> Void)?
+    private var link: CADisplayLink?
+
+    func start() {
+        guard link == nil else { return }
+        let l = CADisplayLink(target: self, selector: #selector(fire))
+        l.add(to: .main, forMode: .common)
+        link = l
+    }
+
+    func stop() {
+        link?.invalidate()
+        link = nil
+    }
+
+    @objc private func fire() { onTick?() }
+}
+
+/// Debug launch arguments for checking the demo in the Simulator (ignored in release builds):
+/// `-demoManual` start paused · `-demoSpeed 8` play faster · `-demoRunTo 211` hold after that many frames ·
+/// `-animScale 8` slow the "+1" and bump animations down · `-noAutoUnlock` keep Success on screen.
+struct DemoDebug {
+    var manual = false
+    var speed = 1.0
+    var runTo: Int?
+    var animationScale = 1.0
+    var noAutoUnlock = false
+    var previewScreen: String?
+
+    static let current: DemoDebug = {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        func value(_ name: String) -> String? {
+            guard let i = args.firstIndex(of: name), i + 1 < args.count else { return nil }
+            return args[i + 1]
+        }
+        return DemoDebug(
+            manual: args.contains("-demoManual"),
+            speed: value("-demoSpeed").flatMap(Double.init) ?? 1,
+            runTo: value("-demoRunTo").flatMap(Int.init),
+            animationScale: value("-animScale").flatMap(Double.init) ?? 1,
+            noAutoUnlock: args.contains("-noAutoUnlock"),
+            previewScreen: value("-previewScreen")
+        )
+        #else
+        return DemoDebug()
+        #endif
+    }()
 }
