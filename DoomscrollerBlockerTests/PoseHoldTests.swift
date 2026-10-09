@@ -7,14 +7,15 @@ import XCTest
 /// degenerate skeleton (shoulder width 0.22 → 0.01) with HIGH confidence for ~1.5 s.
 /// Without PoseHold the counter sees the user vanish / leave the plank and counts nothing.
 final class PoseHoldTests: XCTestCase {
-    private func loadRecording() throws -> Recording {
-        let url = Bundle(for: PoseHoldTests.self).resourceURL!.appendingPathComponent("RealRecordings/ios-session-1.json")
+    private func loadRecording(_ name: String = "ios-session-1") throws -> Recording {
+        let url = Bundle(for: PoseHoldTests.self).resourceURL!.appendingPathComponent("RealRecordings/\(name).json")
         return try JSONDecoder().decode(Recording.self, from: Data(contentsOf: url))
     }
 
-    private func replay(_ rec: Recording, useHold: Bool) -> [CounterEvent] {
+    private func replay(_ rec: Recording, useHold: Bool, down: Double = DepthPreset.normal) -> [CounterEvent] {
         var cfg = CounterConfig.visionDefault
         cfg.targetReps = 30
+        cfg.downThreshold = down
         let counter = RepCounter(cfg)
         var hold = PoseHold()
         var counting = false
@@ -45,6 +46,24 @@ final class PoseHoldTests: XCTestCase {
         XCTAssertEqual(count(events) { if case .partial = $0 { return true } else { return false } }, 1)
         XCTAssertEqual(count(events) { if case .paused = $0 { return true } else { return false } }, 0)
         XCTAssertEqual(count(events) { if case .repCancelled = $0 { return true } else { return false } }, 0)
+    }
+
+    /// 3 serious push-ups then 2 shallow ones (peaks 0.56 0.55 0.57 | 0.51 0.44), wide-FOV camera.
+    /// The web's 0.25 counted all 5; the iPhone preset rejects the shallowest with "Go lower".
+    func testIPhoneDepthPresetRejectsTheShallowestRep() throws {
+        let rec = try loadRecording("ios-session-2")
+        let web = replay(rec, useHold: true, down: DepthPreset.normal)
+        XCTAssertEqual(count(web) { if case .rep = $0 { return true } else { return false } }, 5, "web threshold counts the shallow reps")
+        let events = replay(rec, useHold: true, down: VisionDepthPreset.normal)
+        XCTAssertEqual(count(events) { if case .rep = $0 { return true } else { return false } }, 4)
+        XCTAssertEqual(count(events) { if case .partial = $0 { return true } else { return false } }, 1)
+        XCTAssertEqual(count(events) { if case .paused = $0 { return true } else { return false } }, 0)
+    }
+
+    func testTheFirstRecordingIsUnaffectedByTheIPhonePreset() throws {
+        let events = replay(try loadRecording(), useHold: true, down: VisionDepthPreset.normal)
+        XCTAssertEqual(count(events) { if case .rep = $0 { return true } else { return false } }, 4)
+        XCTAssertEqual(count(events) { if case .partial = $0 { return true } else { return false } }, 1)
     }
 
     func testNothingIsHeldOutsideASet() {

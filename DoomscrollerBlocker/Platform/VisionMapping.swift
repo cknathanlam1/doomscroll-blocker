@@ -60,6 +60,20 @@ enum VisionMapping {
     }
 }
 
+/// Depth presets for the REAL camera on the iPhone (settings: lenient / normal / strict).
+///
+/// The web's 0.21 / 0.25 / 0.29 come from its geometric simulator ("0.25 ≈ a 95–100° elbow").
+/// On a real iPhone on the floor the depth signal is about twice as large: recorded sets of full
+/// push-ups peak at d ≈ 0.54–0.70 (the web's own real laptop session peaked at 0.74–0.79). In a
+/// recorded set the two shallow reps peaked at 0.51 and 0.44, so 0.25 counted them. 0.45–0.48
+/// counts the full reps and rejects the 0.44 one; from 0.50 up, real reps start to be rejected.
+/// The demo (a simulated person) keeps the web presets. Re-tune with more recordings (M5).
+enum VisionDepthPreset {
+    static let lenient = 0.38
+    static let normal = 0.46
+    static let strict = 0.48
+}
+
 extension CounterConfig {
     /// The web tuned visibilityThreshold 0.5 / wristVisibilityThreshold 0.4 on MediaPipe
     /// `visibility`. Vision confidences are lower for the same joint, so start around

@@ -123,9 +123,9 @@ final class ChallengeSession: ObservableObject {
         var c = CounterConfig.visionDefault
         c.targetReps = min(30, max(5, reps))
         switch depthPreset {
-        case "lenient": c.downThreshold = DepthPreset.lenient
-        case "strict": c.downThreshold = DepthPreset.strict
-        default: c.downThreshold = DepthPreset.normal
+        case "lenient": c.downThreshold = source == .camera ? VisionDepthPreset.lenient : DepthPreset.lenient
+        case "strict": c.downThreshold = source == .camera ? VisionDepthPreset.strict : DepthPreset.strict
+        default: c.downThreshold = source == .camera ? VisionDepthPreset.normal : DepthPreset.normal
         }
         return c
     }
