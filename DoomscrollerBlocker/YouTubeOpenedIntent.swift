@@ -15,6 +15,7 @@ struct YouTubeOpenedIntent: AppIntent {
             return .result()
         }
         log.record(allowedByPass: false)
+        log.requestIntercept()
         try await continueInForeground(alwaysConfirm: false)
         return .result()
     }

@@ -121,7 +121,7 @@ final class ChallengeSession: ObservableObject {
 
     private func makeConfig() -> CounterConfig {
         var c = CounterConfig.visionDefault
-        c.targetReps = min(30, max(5, reps))
+        c.targetReps = min(30, max(1, reps))
         switch depthPreset {
         case "lenient": c.downThreshold = source == .camera ? VisionDepthPreset.lenient : DepthPreset.lenient
         case "strict": c.downThreshold = source == .camera ? VisionDepthPreset.strict : DepthPreset.strict

@@ -17,6 +17,7 @@
 		4A8D3F626FDDC335A67A26A5 /* DoomscrollerBlockerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B45D36688DFF3E8D0B0833 /* DoomscrollerBlockerApp.swift */; };
 		4E3600FEEB4A1A8908F3E572 /* DemoRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6392FC9893EC7D9C2665FD4 /* DemoRunner.swift */; };
 		536CF38A0A64D921F5D9C3AC /* PoseHold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F512DC53329F3FFBB053953 /* PoseHold.swift */; };
+		5634C806D10AB1388C3A6EB1 /* OpenLogInterceptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF50CDC7637E58EAD52C7C3B /* OpenLogInterceptTests.swift */; };
 		56AF01554B0265F5AFA5A1A6 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86F3EAA023DF613BBC0044D /* DebugPanel.swift */; };
 		5B495D47908BA75499E3D6FA /* ChallengeFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC5AF6469745AF454383B0F /* ChallengeFlowView.swift */; };
 		5F52EBF8158593E03CDF7A49 /* RepCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD9F050633480EE2BB3D2218 /* RepCounter.swift */; };
@@ -30,6 +31,7 @@
 		73D8517B8E3C7186101A463F /* PlacementLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E63CC5D8DAFBA7AEDA87FA /* PlacementLayer.swift */; };
 		76EA6FE8274993150BFCDA49 /* GoldenParityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D827258BEAEC0E4727E1E858 /* GoldenParityTests.swift */; };
 		7A060EA74E2F5BBBFFDA72F9 /* PoseDebugScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8580AE2F6B3B8A7D98ED0F0 /* PoseDebugScreen.swift */; };
+		7A9C7325707BEE659EDDE0E0 /* InterceptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560698119E0C97E390FED062 /* InterceptView.swift */; };
 		80BEDBBC2806ACCE6AABF487 /* BarlowCondensed-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A3A3A5B9F8F0518BDBB3F8AE /* BarlowCondensed-ExtraBold.ttf */; };
 		811B4414B696CD958326EE6B /* RepCounterSimTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C6D748E051ED0DA07419D3 /* RepCounterSimTests.swift */; };
 		83B0E10240ABF80731618BEA /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 6AB626053A6523E4B973B549 /* OFL.txt */; };
@@ -82,6 +84,7 @@
 		41C6D748E051ED0DA07419D3 /* RepCounterSimTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCounterSimTests.swift; sourceTree = "<group>"; };
 		50E63CC5D8DAFBA7AEDA87FA /* PlacementLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacementLayer.swift; sourceTree = "<group>"; };
 		53F92ABFC27D3799CA0640E6 /* Types.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Types.swift; sourceTree = "<group>"; };
+		560698119E0C97E390FED062 /* InterceptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterceptView.swift; sourceTree = "<group>"; };
 		6A6E5A923DC53AA853716763 /* PushupSimulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushupSimulator.swift; sourceTree = "<group>"; };
 		6AB626053A6523E4B973B549 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		7911321F9971279674A68F35 /* RobustnessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RobustnessTests.swift; sourceTree = "<group>"; };
@@ -97,6 +100,7 @@
 		AD9F050633480EE2BB3D2218 /* RepCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepCounter.swift; sourceTree = "<group>"; };
 		ADA7AA3094BCB0A963BDDA90 /* SimTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimTestHelpers.swift; sourceTree = "<group>"; };
 		AF118F2DBBCF26897E5D4B6E /* StageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StageView.swift; sourceTree = "<group>"; };
+		AF50CDC7637E58EAD52C7C3B /* OpenLogInterceptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenLogInterceptTests.swift; sourceTree = "<group>"; };
 		AF6689F1464CCB006E59C904 /* BarlowCondensed-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "BarlowCondensed-Black.ttf"; sourceTree = "<group>"; };
 		B18F620EF4BC944D526EA421 /* RealRecordings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = RealRecordings; path = DoomscrollerBlockerTests/RealRecordings; sourceTree = SOURCE_ROOT; };
 		B42D3F857A828867DCB19D87 /* YouTubeOpenedIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeOpenedIntent.swift; sourceTree = "<group>"; };
@@ -130,6 +134,7 @@
 				BC36FAEBD35B37F4C535E1F3 /* ChallengeUILogic.swift */,
 				E86F3EAA023DF613BBC0044D /* DebugPanel.swift */,
 				31119A55D8D3EE74816A12BB /* EndScreens.swift */,
+				560698119E0C97E390FED062 /* InterceptView.swift */,
 				50E63CC5D8DAFBA7AEDA87FA /* PlacementLayer.swift */,
 				D54E235E1EAB93C7BFC9C0E6 /* StageOverlay.swift */,
 				AF118F2DBBCF26897E5D4B6E /* StageView.swift */,
@@ -184,6 +189,7 @@
 				D6B4A578843AF43E0D90FD28 /* FlexibleReturnTests.swift */,
 				D827258BEAEC0E4727E1E858 /* GoldenParityTests.swift */,
 				FEEA8402540B501AD617DBBF /* GoldenSimulatorTests.swift */,
+				AF50CDC7637E58EAD52C7C3B /* OpenLogInterceptTests.swift */,
 				7EDA016855553FAB058E0A65 /* PoseHoldTests.swift */,
 				037959D18B722555B6BC715E /* RecordingReplayTests.swift */,
 				41C6D748E051ED0DA07419D3 /* RepCounterSimTests.swift */,
@@ -387,6 +393,7 @@
 				361764832F01F1A92A28D6C9 /* FlexibleReturnTests.swift in Sources */,
 				76EA6FE8274993150BFCDA49 /* GoldenParityTests.swift in Sources */,
 				F56D0537749CA2ABE96248B3 /* GoldenSimulatorTests.swift in Sources */,
+				5634C806D10AB1388C3A6EB1 /* OpenLogInterceptTests.swift in Sources */,
 				63FA052F72574DEDF0317DB4 /* PoseHoldTests.swift in Sources */,
 				E3440BA2AAAA4F5D0303BCD3 /* RecordingReplayTests.swift in Sources */,
 				811B4414B696CD958326EE6B /* RepCounterSimTests.swift in Sources */,
@@ -413,6 +420,7 @@
 				4A8D3F626FDDC335A67A26A5 /* DoomscrollerBlockerApp.swift in Sources */,
 				397F037FC5C6C47E03B732F9 /* EndScreens.swift in Sources */,
 				3CA8979CA1A324C20C2B194D /* Features.swift in Sources */,
+				7A9C7325707BEE659EDDE0E0 /* InterceptView.swift in Sources */,
 				9DBC1BCA3966D8BBC48FACD5 /* OneEuro.swift in Sources */,
 				17ED8D696043B5D3961F2B33 /* OpenLog.swift in Sources */,
 				73D8517B8E3C7186101A463F /* PlacementLayer.swift in Sources */,
