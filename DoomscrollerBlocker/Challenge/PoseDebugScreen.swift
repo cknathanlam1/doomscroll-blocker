@@ -6,6 +6,8 @@ import AVFoundation
 struct PoseDebugScreen: View {
     @StateObject private var session = ChallengeSession()
     @Environment(\.scenePhase) private var scenePhase
+    @State private var log: [String] = []
+    @State private var shareURL: URL?
 
     var body: some View {
         ZStack {
@@ -25,10 +27,27 @@ struct PoseDebugScreen: View {
             }
         }
         .overlay(alignment: .top) { readout }
+        .overlay(alignment: .bottom) { eventLog }
         .navigationTitle("Pose debug")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { session.start(.camera) }
         .onDisappear { session.stop() }
+        .onChange(of: session.snapshot?.features.t) { _, _ in
+            guard let events = session.snapshot?.events, !events.isEmpty else { return }
+            log.append(contentsOf: events.map(Self.describe))
+            if log.count > 40 { log.removeFirst(log.count - 40) }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Save recording") {
+                    shareURL = session.recordingFileURL()
+                }
+                .disabled(session.recordedFrames == 0)
+            }
+        }
+        .sheet(isPresented: Binding(get: { shareURL != nil }, set: { if !$0 { shareURL = nil } })) {
+            if let shareURL { ShareSheet(url: shareURL) }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { session.resume() } else { session.suspend() }
         }
@@ -44,6 +63,8 @@ struct PoseDebugScreen: View {
                         s?.depth.map { String(format: "%.2f", $0) } ?? "-",
                         s?.heightRatio.map { String(format: "%.2f", $0) } ?? "-",
                         s?.features.visibleWrists ?? 0))
+            Text(String(format: "peak %.2f · need ≥ %.2f to count · frames %d",
+                        s?.peakDepth ?? 0, session.config.downThreshold, session.recordedFrames))
             if let t = s?.countdownRemainingMs { Text(String(format: "countdown %.1f s", t / 1000)) }
         }
         .font(.system(size: 12, design: .monospaced))
@@ -53,6 +74,42 @@ struct PoseDebugScreen: View {
         .padding(.top, 4)
         .allowsHitTesting(false)
     }
+}
+
+extension PoseDebugScreen {
+    private var eventLog: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            ForEach(Array(log.suffix(8).enumerated()), id: \.offset) { _, line in Text(line) }
+        }
+        .font(.system(size: 11, design: .monospaced))
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(8)
+        .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
+        .padding(8)
+        .allowsHitTesting(false)
+    }
+
+    static func describe(_ e: CounterEvent) -> String {
+        let t = String(format: "%7.1fs", e.t / 1000)
+        switch e {
+        case .rep(_, let count, let ms, let peak): return "\(t) REP #\(count) (peak \(String(format: "%.2f", peak)), \(Int(ms)) ms)"
+        case .partial(_, let peak, let live): return "\(t) GO LOWER – not counted (peak \(String(format: "%.2f", peak)), \(live ? "live" : "at top"))"
+        case .repCancelled(_, let reason): return "\(t) rep cancelled: \(reason.rawValue)"
+        case .depthReached: return "\(t) depth reached"
+        case .paused(_, let reason): return "\(t) paused: \(reason.rawValue)"
+        case .countdownTick(_, let n): return "\(t) countdown \(n)"
+        default: return "\(t) \(e.type)"
+        }
+    }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let url: URL
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [url], applicationActivities: nil)
+    }
+    func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }
 
 /// Raw joints with their confidence: green = trusted by the counter, yellow = borderline, red = ignored.
