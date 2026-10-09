@@ -56,7 +56,7 @@ struct PoseDebugScreen: View {
     private var readout: some View {
         let s = session.snapshot
         return VStack(alignment: .leading, spacing: 2) {
-            Text(String(format: "%.0f fps · detect %.0f ms", session.fps, session.detectMs))
+            Text(String(format: "%.0f fps · detect %.0f ms · ", session.fps, session.detectMs) + session.camera.formatInfo)
             Text("phase \(s?.phase.rawValue ?? "-") · motion \(s?.motion.rawValue ?? "-") · count \(s?.count ?? 0)/\(s?.target ?? 0)")
             Text("hint \(s?.hint?.rawValue ?? "-") · issue \(session.issue.rawValue) · inFrame \(String(s?.inFrame ?? false))")
             Text(String(format: "depth %@ · h %@ · wrists %d",

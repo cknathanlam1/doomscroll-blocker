@@ -27,6 +27,8 @@ final class PoseCamera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     private let output = AVCaptureVideoDataOutput()
     private let request = VNDetectHumanBodyPoseRequest()
     private var configured = false
+    /// What the camera ended up with (format size and horizontal field of view), for the debug readout.
+    private(set) var formatInfo = ""
     private var lastT = -Double.infinity
     private var lastLumaAt = -Double.infinity
     private static let lumaEveryMs = 500.0
@@ -38,11 +40,12 @@ final class PoseCamera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
               let input = try? AVCaptureDeviceInput(device: device) else { return false }
         session.beginConfiguration()
         defer { session.commitConfiguration() }
-        // Lighter than .high: Vision downsamples anyway, and it saves battery and heat.
-        // 4:3 like the web prototype's 640×480 (aspect 0.75 once upright).
-        session.sessionPreset = .vga640x480
         guard session.canAddInput(input), session.canAddOutput(output) else { return false }
         session.addInput(input)
+        // The widest field of view the front camera offers: from a phone on the floor the head
+        // takes a big part of a narrow frame (and the face next to the lens is where Vision
+        // fails). The preset is replaced by an explicit format.
+        selectWidestFormat(device)
         output.alwaysDiscardsLateVideoFrames = true
         output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange]
         output.setSampleBufferDelegate(self, queue: queue)
@@ -51,9 +54,50 @@ final class PoseCamera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
             if connection.isVideoRotationAngleSupported(90) { connection.videoRotationAngle = 90 }
             connection.automaticallyAdjustsVideoMirroring = false
             if connection.isVideoMirroringSupported { connection.isVideoMirrored = false }
+            // Video stabilization crops the edges of the picture.
+            connection.preferredVideoStabilizationMode = .off
         }
         configured = true
         return true
+    }
+
+    /// Picks the format with the largest horizontal FOV (ties: the smallest image, which is
+    /// lighter for Vision) and turns off what crops the picture (stabilization, Center Stage).
+    private func selectWidestFormat(_ device: AVCaptureDevice) {
+        let candidates = device.formats.filter { format in
+            let d = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
+            return d.width >= 640 && d.height >= 480
+                && format.videoSupportedFrameRateRanges.contains { $0.maxFrameRate >= 30 }
+        }
+        func area(_ f: AVCaptureDevice.Format) -> Int {
+            let d = CMVideoFormatDescriptionGetDimensions(f.formatDescription)
+            return Int(d.width) * Int(d.height)
+        }
+        guard let widest = candidates.max(by: { a, b in
+            if abs(a.videoFieldOfView - b.videoFieldOfView) > 0.5 { return a.videoFieldOfView < b.videoFieldOfView }
+            return area(a) > area(b)
+        }) else {
+            session.sessionPreset = .vga640x480
+            return
+        }
+        session.sessionPreset = .inputPriority
+        do {
+            try device.lockForConfiguration()
+            device.activeFormat = widest
+            device.activeVideoMinFrameDuration = CMTime(value: 1, timescale: 30)
+            device.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: 30)
+            device.videoZoomFactor = 1
+            // Center Stage re-frames (crops) the picture to follow a face; we want the full view.
+            if AVCaptureDevice.isCenterStageEnabled {
+                AVCaptureDevice.centerStageControlMode = .app
+                AVCaptureDevice.isCenterStageEnabled = false
+            }
+            device.unlockForConfiguration()
+        } catch {
+            session.sessionPreset = .vga640x480
+        }
+        let d = CMVideoFormatDescriptionGetDimensions(widest.formatDescription)
+        formatInfo = String(format: "%dx%d · FOV %.0f°", d.width, d.height, widest.videoFieldOfView)
     }
 
     /// Starts the session. `completion(false)` if the camera can't be used.
