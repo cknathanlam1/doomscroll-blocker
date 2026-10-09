@@ -48,7 +48,7 @@ struct ContentView: View {
                         Spacer()
                         Button("Open YouTube (no push-ups)") {
                             log.startPass()
-                            openURL(URL(string: "youtube://")!)
+                            YouTubeLauncher.open()
                         }
                     }
                     .font(.footnote)
@@ -62,7 +62,7 @@ struct ContentView: View {
                     onUnlock: {
                         showChallenge = false
                         log.startPass()
-                        openURL(URL(string: "youtube://")!)
+                        YouTubeLauncher.open()
                     },
                     onClose: {
                         challenge.stop()
