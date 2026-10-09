@@ -115,7 +115,7 @@ struct GaveUpView: View {
     /// Landmark recording to export, if there is one.
     var recording: (frames: Int, makeFile: () -> URL?)?
 
-    @State private var shareURL: ShareItem?
+    @State private var shareURL: RecordingShareItem?
 
     var body: some View {
         ScreenScaffold(background: Theme.page) {
@@ -132,20 +132,20 @@ struct GaveUpView: View {
             AppButton(title: "Done", icon: nil, kind: .ghost, action: onDone)
             if let recording {
                 AppButton(title: "Save recording (\(recording.frames) frames)", icon: nil, kind: .ghost) {
-                    if let url = recording.makeFile() { shareURL = ShareItem(url: url) }
+                    if let url = recording.makeFile() { shareURL = RecordingShareItem(url: url) }
                 }
             }
         }
-        .sheet(item: $shareURL) { item in ShareSheet(url: item.url) }
+        .sheet(item: $shareURL) { item in RecordingShareSheet(url: item.url) }
     }
 }
 
-struct ShareItem: Identifiable {
+struct RecordingShareItem: Identifiable {
     let id = UUID()
     let url: URL
 }
 
-struct ShareSheet: UIViewControllerRepresentable {
+struct RecordingShareSheet: UIViewControllerRepresentable {
     var url: URL
     func makeUIViewController(context: Context) -> UIActivityViewController {
         UIActivityViewController(activityItems: [url], applicationActivities: nil)

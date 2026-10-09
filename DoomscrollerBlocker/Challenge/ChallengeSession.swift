@@ -440,6 +440,9 @@ final class ChallengeSession: ObservableObject {
 
     var config: CounterConfig { counter.config }
 
+    /// Every counter event of this set so far (the debug panel lists the last few).
+    var debugEvents: [CounterEvent] { recordedEvents }
+
     // MARK: Demo ("Watch a demo")
 
     /// Plays the scripted simulated person through the session's OWN counter, in real time

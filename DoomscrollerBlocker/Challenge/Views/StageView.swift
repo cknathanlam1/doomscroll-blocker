@@ -91,6 +91,15 @@ struct StageView: View {
                 }
                 bottomRow(size: size, insets: insets)
 
+                // 9. Debug panel (developer setting, off by default)
+                if session.debug {
+                    DebugPanel(session: session, maxBodyHeight: size.height * 0.46)
+                        .padding(.leading, insets.leading + 8)
+                        .padding(.trailing, insets.trailing + 8)
+                        .padding(.bottom, insets.bottom + 10)
+                        .frame(width: size.width, height: size.height, alignment: .bottomLeading)
+                }
+
                 // 10-11. Loading and "Tap to resume"
                 if session.loadingMessage != nil {
                     LoadingOverlay(message: session.loadingMessage ?? "", onCancel: onCancelLoading)

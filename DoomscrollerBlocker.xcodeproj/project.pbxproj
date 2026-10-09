@@ -17,6 +17,7 @@
 		4A8D3F626FDDC335A67A26A5 /* DoomscrollerBlockerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B45D36688DFF3E8D0B0833 /* DoomscrollerBlockerApp.swift */; };
 		4E3600FEEB4A1A8908F3E572 /* DemoRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6392FC9893EC7D9C2665FD4 /* DemoRunner.swift */; };
 		536CF38A0A64D921F5D9C3AC /* PoseHold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F512DC53329F3FFBB053953 /* PoseHold.swift */; };
+		56AF01554B0265F5AFA5A1A6 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86F3EAA023DF613BBC0044D /* DebugPanel.swift */; };
 		5B495D47908BA75499E3D6FA /* ChallengeFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC5AF6469745AF454383B0F /* ChallengeFlowView.swift */; };
 		5F52EBF8158593E03CDF7A49 /* RepCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD9F050633480EE2BB3D2218 /* RepCounter.swift */; };
 		6267FC45E45E0E5D0F74D5F4 /* PoseCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = E938373BDDA023CB0E28C0F7 /* PoseCamera.swift */; };
@@ -111,6 +112,7 @@
 		DE95012A484EB6E084A86F5E /* OneEuro.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneEuro.swift; sourceTree = "<group>"; };
 		E1B45D36688DFF3E8D0B0833 /* DoomscrollerBlockerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoomscrollerBlockerApp.swift; sourceTree = "<group>"; };
 		E6805318D1D01F91CD728D80 /* BarlowCondensed-BlackItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "BarlowCondensed-BlackItalic.ttf"; sourceTree = "<group>"; };
+		E86F3EAA023DF613BBC0044D /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		E938373BDDA023CB0E28C0F7 /* PoseCamera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseCamera.swift; sourceTree = "<group>"; };
 		EF04611D55C4E49F3E885067 /* DoomscrollerBlockerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DoomscrollerBlockerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8580AE2F6B3B8A7D98ED0F0 /* PoseDebugScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseDebugScreen.swift; sourceTree = "<group>"; };
@@ -124,6 +126,7 @@
 				9AC5AF6469745AF454383B0F /* ChallengeFlowView.swift */,
 				ABFE5A78C24FD91D5C16453F /* ChallengeLayer.swift */,
 				BC36FAEBD35B37F4C535E1F3 /* ChallengeUILogic.swift */,
+				E86F3EAA023DF613BBC0044D /* DebugPanel.swift */,
 				31119A55D8D3EE74816A12BB /* EndScreens.swift */,
 				50E63CC5D8DAFBA7AEDA87FA /* PlacementLayer.swift */,
 				D54E235E1EAB93C7BFC9C0E6 /* StageOverlay.swift */,
@@ -401,6 +404,7 @@
 				C06220CBE72A79AE8D396570 /* ChallengeSession.swift in Sources */,
 				DF83F68FCBF4464FC377A7F0 /* ChallengeUILogic.swift in Sources */,
 				F39A907866EBB0653DCA41E2 /* ContentView.swift in Sources */,
+				56AF01554B0265F5AFA5A1A6 /* DebugPanel.swift in Sources */,
 				4E3600FEEB4A1A8908F3E572 /* DemoRunner.swift in Sources */,
 				3C484F89C9ECB98B227639F3 /* DemoScript.swift in Sources */,
 				4A8D3F626FDDC335A67A26A5 /* DoomscrollerBlockerApp.swift in Sources */,
